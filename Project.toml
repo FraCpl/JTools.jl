@@ -1,0 +1,13 @@
+name = "JTools"
+uuid = "ab7590e3-7970-434e-bf9d-2a5e455e45fa"
+authors = ["F. Capolupo"]
+version = "0.1.0"
+
+[compat]
+julia = "1.9"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
