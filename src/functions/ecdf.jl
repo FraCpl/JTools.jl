@@ -1,0 +1,47 @@
+# Compute Empirical Cumulative Distribution Function F(y) of input data 'y'.
+#
+# Author: F. Capolupo
+# European Space Agency, 2021
+#
+# TEST:  ecdf(abs.(randn(100000)) + 2.0*rand(100000); doPlot=true)
+function ecdf(y::Vector; doPlot::Bool=false)
+
+    # Check inputs
+    x = copy(y)
+    filter!(x -> ~(isnan.(x) .| isinf.(x)), x)   # Remove NaN and Inf entries
+
+    if isempty(x)
+        return NaN, NaN
+    end
+
+    # Compute Empirical F(x)
+    sort!(x)
+    n = length(x)
+    F = (1:n)./n
+
+    # Plot
+    if doPlot
+        histogram(x; bins=100, normalize=:pdf, lab="", fillalpha=0.3, linealpha=0.0, color=:gray)
+        display(
+            plot!(
+                x, F;
+                linewidth=2,
+                color=:white,
+                linetype=:steppre,
+                ylims=(0.0, 1.05),
+                xlabel="x",
+                ylabel="P(x), F(x)",
+                lab="",
+                ticks=:native,
+                size=(750, 500),
+                framestyle=:box,
+                xlim=(minimum(x), maximum(x)),
+                bg=RGB(40/255, 44/255, 52/255),
+                fg=RGB(0.7,0.7,0.7),
+                margin =0.3Plots.cm
+            )
+        )
+    end
+
+    return x, F
+end
