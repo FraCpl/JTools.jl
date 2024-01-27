@@ -21,7 +21,14 @@ function ecdf(y::Vector; doPlot::Bool=false)
 
     # Plot
     if doPlot
-        histogram(x; bins=100, normalize=:pdf, lab="", fillalpha=0.3, linealpha=0.0, color=:gray)
+        set_theme!(theme_fra(true))
+        f = Figure(resolution=(750, 500))
+        ax = Axis(f[1, 1]; limits=(minimum(x), maximum(x), 0.0, 1.05), xlabel="x", ylabel="P(x), F(x)")
+
+        hist!(ax, x; bins=100, normalization=:pdf, lab="", alpha=0.3, strokewidth=0.0, color=:gray)
+        stairs!(x, F; color=:white)
+        display(f)
+        #=
         display(
             plot!(
                 x, F;
@@ -41,6 +48,8 @@ function ecdf(y::Vector; doPlot::Bool=false)
                 margin =0.3Plots.cm
             )
         )
+        =#
+        return x, F, f
     end
 
     return x, F
