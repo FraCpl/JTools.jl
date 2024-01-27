@@ -29,6 +29,7 @@ function ecdf(y::Vector; doPlot::Bool=false)
         stairs!(x, F; color=:white)
         display(f)
         #=
+        ~~~ OLD Plots.jl code ~~~
         display(
             plot!(
                 x, F;
