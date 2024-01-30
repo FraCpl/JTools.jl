@@ -77,3 +77,20 @@ function axisoff!(ax)
     hidedecorations!(ax)  # hides ticks, grid and lables
     hidespines!(ax)  # hide the frame
 end
+
+# Plot axes of frame F in world (image) frame W
+function plotframe!(ax, pos_W, R_WF, length=1)
+    xF_W = R_WF[:, 1]
+    yF_W = R_WF[:, 2]
+    zF_W = R_WF[:, 3]
+    arrows!(ax, [pos_W[1]], [pos_W[2]], [pos_W[3]], [xF_W[1]], [xF_W[2]], [xF_W[3]]; arrowsize=0.1*length, lengthscale=length, color=:red)
+    arrows!(ax, [pos_W[1]], [pos_W[2]], [pos_W[3]], [yF_W[1]], [yF_W[2]], [yF_W[3]]; arrowsize=0.1*length, lengthscale=length, color=:blue)
+    arrows!(ax, [pos_W[1]], [pos_W[2]], [pos_W[3]], [zF_W[1]], [zF_W[2]], [zF_W[3]]; arrowsize=0.1*length, lengthscale=length, color=:green)
+end
+
+# Transform 3D model
+function transformModel(m, pos_I, R_IB=I, scale=1.0)
+    c, f = coordinates(m), faces(m)
+    mt = [Point3f(pos_I + scale*R_IB*c[k]) for k in eachindex(c)]
+    return GeometryBasics.Mesh(mt, f)
+end
