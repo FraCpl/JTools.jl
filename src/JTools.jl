@@ -10,7 +10,8 @@ using LinearAlgebra
 
 export ecdf, goldenSectionSearch, rootFinder, ode38, trapz, cumtrapz
 export dm2dv, dm2dt, dv2dm, dv2dt, units, convertUnits
-export theme_fra, plotMoon!, axisoff!, plotframe!, transformModel
+export theme_fra, plotMoon!, axisoff!, plotframe!, transformModel, sensorFovModel, cuboidModel
+export crossmat
 include("functions/trapz.jl")
 include("functions/ecdf.jl")
 include("functions/goldenSectionSearch.jl")
@@ -19,5 +20,6 @@ include("functions/ode38.jl")
 include("functions/rocketEqs.jl")
 include("functions/units.jl")
 include("functions/makieTools.jl")
+include("functions/math.jl")
 
 end
