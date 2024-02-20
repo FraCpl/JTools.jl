@@ -23,9 +23,9 @@ function ecdf(y::Vector; doPlot::Bool=false)
     if doPlot
         set_theme!(theme_fra(true))
         f = Figure(resolution=(750, 500))
-        ax = Axis(f[1, 1]; limits=(minimum(x), maximum(x), 0.0, 1.05), xlabel="x", ylabel="P(x), F(x)")
+        ax = Axis(f[1, 1]; limits=(minimum(x), maximum(x), 0.0, nothing), xlabel="x", ylabel="P(x), F(x)")
 
-        hist!(ax, x; bins=100, normalization=:pdf, lab="", alpha=0.3, strokewidth=0.0, color=:gray)
+        hist!(ax, x; bins=minimum([length(unique(x)); 100]), normalization=:pdf, scale_to=1.0, lab="", alpha=0.3, strokewidth=0.0, color=:gray)
         stairs!(x, F; color=:white)
         display(f)
         #=
