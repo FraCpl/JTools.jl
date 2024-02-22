@@ -73,7 +73,7 @@ function plotMoon!(ax, pos=zeros(3), R=1.0; n=256)
     ye = [sin(φ)*sin(θ) for θ in θ, φ in φ]
     ze = [cos(θ) for θ in θ, φ in φ]
     surface!(ax, R*xe .+ pos[1], R*ye .+ pos[2], R*ze .+ pos[3];
-        color=load(joinpath(@__DIR__, "../../assets/lroc_color_poles_2k.tif")), shading=false)
+        color=load(joinpath(@__DIR__, "../../assets/lroc_color_poles_2k.tif")), shading=NoShading)
 end
 
 function axisoff!(ax)
