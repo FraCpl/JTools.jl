@@ -11,7 +11,7 @@ using LinearAlgebra
 export ecdf, goldenSectionSearch, rootFinder, ode38, trapz, cumtrapz
 export dm2dv, dm2dt, dv2dm, dv2dt, units, convertUnits
 export theme_fra, plotMoon!, axisoff!, plotframe!, transformModel, sensorFovModel, cuboidModel
-export crossmat
+export crossmat, logrange, mag2db
 include("functions/trapz.jl")
 include("functions/ecdf.jl")
 include("functions/goldenSectionSearch.jl")
