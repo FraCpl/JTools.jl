@@ -130,3 +130,32 @@ function cuboidModel(lx, ly, lz; pos_I=zeros(3), R_IB=I)
     f = [QuadFace([1, 2, 3, 4]), QuadFace([2, 3, 7, 6]), QuadFace([7, 8, 5, 6]), QuadFace([1, 4, 8, 5]), QuadFace([4, 3, 7, 8]), QuadFace([1, 2, 6, 5])]
     return GeometryBasics.Mesh(v, f)
 end
+
+function nicholsgrid(f; center::Int=-1)
+    ct = 360*center + 180
+    ax = Axis(f; limits=(ct - 180, ct + 180, -40, 40), xgridvisible=false, ygridvisible=false,
+        xlabel="Open-Loop Phase [deg]", ylabel="Open-Loop Gain [dB]", title="Nichols Chart")
+    phase = range(1, 359, 1000)*π/180;
+
+    for mag in [6; 3; 2; 1; 0.5; 0; -0.5; -1; -2; -3; -6; -9; -12; -15; -20; -25; -30; -40]
+        H = db2mag(mag).*exp.(im*phase)
+        HH = H./(1 .- H)
+        ph = atan.(imag.(HH), real.(HH))
+        unwrap!(ph)
+        mg = mag2db.(abs.(HH))
+
+        lines!(ax, ph*180/pi .+ (ct - 180), mg, linewidth=0.5, color=:grey, linestyle=:dash)
+    end
+
+    mag = -40:0.05:6
+    for phs = [359; 355; 350:-10:10; 5; 1]
+        H = db2mag.(mag).*exp(im*phs*pi/180)
+        HH = H./(1 .- H)
+        ph = atan.(imag.(HH), real.(HH))
+        mg = mag2db.(abs.(HH))
+
+        lines!(ax, ph*180/pi .+ 360.0.*(ph .≤ 0.0) .+ (ct - 180), mg, linewidth=0.5, color=:grey, linestyle=:dash)
+    end
+    scatter!(ax, ct, 0, marker=:cross, color=:grey, markersize=8)
+    return ax
+end
