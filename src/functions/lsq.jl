@@ -22,17 +22,17 @@ Author: F. Capolupo
 European Space Agency, 2020
 """
 function lsq(f, x0;
-        W=1.0,                  # Residuals weighting matrix (i.e., inv(R))
-        lb=-Inf*abs.(x0),       # Lower bound on x
-        ub=Inf*abs.(x0),        # Upper bound on x
-        algorithm=:lm,          # Algorithm choice, can be :lm (Levemberg-Marquardt), or :grad (classic gradient descent)
-        maxIter=1000,           # Maximum number of iterations
-        dxMax=1e3,              # Maximum correction step amplitude
-        tol=1e-9,               # Tolerance on |dx| to declare convergence
-        λ=1e-3,                 # Levemberg-Marquardt parameter
-        maxIterStuck=10,        # Number of iterations to declare the algorithm stuck
-        relTolStuck=0.1/100,    # Relative tolerance to declare the algorithm stuck
-        verbose=true,           # Show progress
+        W=1.0,                      # Residuals weighting matrix (i.e., inv(R))
+        lb=-Inf,                    # Lower bound on x [can be a vector]
+        ub=+Inf,                    # Upper bound on x [can be a vector]
+        algorithm=:lm,              # Algorithm choice, can be :lm (Levemberg-Marquardt), or :grad (classic gradient descent)
+        maxIter=1000,               # Maximum number of iterations
+        dxMax=1e3,                  # Maximum correction step amplitude
+        tol=1e-9,                   # Tolerance on |dx| to declare convergence
+        λ=1e-3,                     # Levemberg-Marquardt parameter
+        maxIterStuck=10,            # Number of iterations to declare the algorithm stuck
+        relTolStuck=0.1/100,        # Relative tolerance to declare the algorithm stuck
+        verbose=true,               # Show progress
     )
 
     iStuck = 0
