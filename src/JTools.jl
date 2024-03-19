@@ -8,6 +8,7 @@ using FileIO
 using GeometryBasics
 using LinearAlgebra
 using Random
+using SpecialFunctions
 
 export ecdf, goldenSectionSearch, rootFinder, ode38, trapz, cumtrapz
 export dm2dv, dm2dt, dv2dm, dv2dt, units, convertUnits
@@ -16,6 +17,7 @@ export nicholsgrid
 export crossmat, logrange, mag2db, db2mag, unwrap!
 export lsq
 export ransac
+export montecarloNsim, montecarloConfidence
 include("functions/trapz.jl")
 include("functions/ecdf.jl")
 include("functions/goldenSectionSearch.jl")
