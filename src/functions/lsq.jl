@@ -33,6 +33,7 @@ function lsq(f, x0;
         maxIterStuck=10,            # Number of iterations to declare the algorithm stuck
         relTolStuck=0.1/100,        # Relative tolerance to declare the algorithm stuck
         verbose=true,               # Show progress
+        userJacobian=false,         # input function does provide jacobian, i.e., r, J = f(x)
     )
 
     iStuck = 0
@@ -42,8 +43,12 @@ function lsq(f, x0;
     for iter in 1:maxIter
 
         # Evaluate residual and jacobian
-        y = f(x)
-        J = ForwardDiff.jacobian(f, x)
+        if userJacobian
+            y, J = f(x)
+        else
+            y = f(x)
+            J = ForwardDiff.jacobian(f, x)
+        end
 
         # Auxiliary matrices
         Jt = J'*W
@@ -106,7 +111,11 @@ function lsq(f, x0;
         normyold = normy
     end
 
-    J = ForwardDiff.jacobian(f, x)
+    if userJacobian
+        ~, J = f(x)
+    else
+        J = ForwardDiff.jacobian(f, x)
+    end
     return x, inv(J'*W*J)
 end
 

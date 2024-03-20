@@ -41,5 +41,7 @@ function ransac(funDist,        # Fit + distance function
         end
     end
 
+    println("RANSAC: $(N - nBest) outliers detected")
+
     return inliers
 end
