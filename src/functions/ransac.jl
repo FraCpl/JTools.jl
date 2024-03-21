@@ -15,6 +15,7 @@ function ransac(funDist,        # Fit + distance function
         Nmin;                   # Minimum number of measurements required to compute a fit
         maxIter=100,            # Maximum number of iterations
         threshold=0.1,          # Inliers distance threshold
+        verbose=true,
     )
 
     # Init parameters and allocations
@@ -41,7 +42,9 @@ function ransac(funDist,        # Fit + distance function
         end
     end
 
-    println("RANSAC: $(N - nBest) outliers detected")
+    if verbose
+        println("RANSAC: $(N - nBest) outliers detected")
+    end
 
     return inliers
 end
