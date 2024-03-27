@@ -1,15 +1,25 @@
-function theme_fra(spinevis=true)
-    bg = RGBf(40/255, 44/255, 52/255)
-    fg = RGBf(0.7,0.7,0.7)
-    fga = RGBf(0.3,0.3,0.3)
+function theme_fra(spinevis=true; light=false)
+    if light
+        bg = :white
+        fg = RGBf(2/255,50/255,71/255)
+        gridcol = (:black, 0.15)
+        minorgridcol = (:black, 0.1)
+        fga = (RGBf(2/255,50/255,71/255), 0.5)
+    else
+        bg = RGBf(40/255, 44/255, 52/255)
+        fg = RGBf(0.7,0.7,0.7)
+        gridcol = (:white, 0.09)
+        minorgridcol = (:white, 0.02)
+        fga = RGBf(0.3,0.3,0.3)
+    end
     Theme(
         backgroundcolor = bg,
         textcolor = fg,
         linecolor = fga,
         Axis = (
             backgroundcolor = :transparent,
-            xgridcolor = (:white, 0.09),
-            ygridcolor = (:white, 0.09),
+            xgridcolor = gridcol,
+            ygridcolor = gridcol,
             leftspinevisible = spinevis,
             rightspinevisible = spinevis,
             bottomspinevisible = spinevis,
@@ -20,8 +30,8 @@ function theme_fra(spinevis=true)
             topspinecolor = fga,
             xminorticksvisible = false,
             yminorticksvisible = false,
-            xminorgridcolor = (:white, 0.02),
-            yminorgridcolor = (:white, 0.02),
+            xminorgridcolor = minorgridcol,
+            yminorgridcolor = minorgridcol,
             xticksvisible = false,
             yticksvisible = false,
             xlabelpadding = 3,
@@ -35,9 +45,9 @@ function theme_fra(spinevis=true)
             padding = (0, 0, 0, 0),
         ),
         Axis3 = (
-            xgridcolor = (:white, 0.09),
-            ygridcolor = (:white, 0.09),
-            zgridcolor = (:white, 0.09),
+            xgridcolor = gridcol,
+            ygridcolor = gridcol,
+            zgridcolor = gridcol,
             xspinesvisible = spinevis,
             yspinesvisible = spinevis,
             zspinesvisible = spinevis,
@@ -158,4 +168,18 @@ function nicholsgrid(f; center::Int=-1)
     end
     scatter!(ax, ct, 0, marker=:cross, color=:grey, markersize=8)
     return ax
+end
+
+function plotEcdf(x, F; kwargs...)
+    f = Figure()
+    ax = Axis(f[1, 1]; ylabel="CDF", limits=(nothing, nothing, 0.0, nothing))
+    plotEcdf!(ax, x, F; kwargs...)
+    return f, ax
+end
+
+function plotEcdf!(ax, x, F; kwargs...)
+    dd = hist!(ax, x; bins=minimum([length(unique(x)); 150]), normalization=:pdf, scale_to=1.0, alpha=0.3, strokewidth=0.0, kwargs...)
+    dd.label = nothing
+    stairs!(x, F; kwargs...)
+    return nothing
 end
