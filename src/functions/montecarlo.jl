@@ -2,16 +2,16 @@
     Nsim = montecarloNsim(P, L, Nfail)
 
 Compute the minimum number of simulations `Nsim` needed to verify a probability of success
-`P` (e.g., 0.9973) with confidence level `L` (e.g. 0.95), knowing the number of failed
-simulations `Nfail`. If the number of simulations exceeds 100_000, the function returns -1.
+`P` with confidence level `L`, knowing the number of failed simulations `Nfail`. If the
+number of simulations exceeds 100_000, the function returns -1.
 
-# Examples
+### Examples
 ```julia-repl
 julia> montecarloNsim(0.997, 0.95, 0)
 997
 ```
 
-# References
+### References
 [1] ECSS-E-ST-60-20C Rev.1, Section E-1
 """
 function montecarloNsim(P::Float64, L::Float64, Nfail::Int)
@@ -29,13 +29,13 @@ end
 Compute the confidence level `L` of the probability of success `P` given `Nfail` failed
 simulations over `Nsim` simulations.
 
-# Examples
+### Examples
 ```julia-repl
 julia> montecarloConfidence(0.997, 1000, 0)
 0.950585606425314
 ```
 
-# References
+### References
 [1] ECSS‐E‐ST‐60‐20C Rev. 1 page 77
 """
 montecarloConfidence(P::Float64, Nsim::Int, Nfail::Int) = beta_inc(Nfail + 1, Nsim - Nfail + 1, 1.0 - P)[1]

@@ -13,7 +13,7 @@ using SpecialFunctions
 export ecdf, goldenSectionSearch, rootFinder, ode38, trapz, cumtrapz
 export dm2dv, dm2dt, dv2dm, dv2dt, units, convertUnits
 export theme_fra, plotMoon!, axisoff!, plotframe!, transformModel, sensorFovModel, cuboidModel
-export plotEcdf, plotEcdf!
+export plotEcdf, plotEcdf!, plotBox, plotBox!
 export nicholsgrid
 export crossmat, logrange, mag2db, db2mag, unwrap!
 export lsq

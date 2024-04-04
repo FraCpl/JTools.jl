@@ -183,3 +183,38 @@ function plotEcdf!(ax, x, F; kwargs...)
     stairs!(x, F; kwargs...)
     return nothing
 end
+
+function plotBox(i, x, width=0.3)
+    f = Figure()
+    ax = Axis(f[1, 1])
+    plotBox!(ax, i, x; width=width)
+    return f, ax
+end
+
+function plotBox!(ax, i, x; width=0.3, kwargs...)
+    xF, F = ecdf(x)
+
+    μ = sum(x)/length(x)
+    x1up = xF[findfirst(F .≥ 0.68)]
+    x1dw = xF[findfirst(F .≥ 1 - 0.68)]
+    x3up = xF[findfirst(F .≥ 0.997)]
+    x3dw = xF[findfirst(F .≥ 1 - 0.997)]
+
+    violin!(ax, 0*x .+ i, x; datalimits=extrema, kwargs...)
+    #boxplot!(ax,0*x .+ i, x; width=0.5)
+
+    lines!(ax, [-1.0; 1.0]*width/2 .+ i, [μ; μ]; color=:black, linewidth=2)
+    lines!(ax, [-1.0; 1.0; 1.0; -1.0; -1.0]*width/2 .+ i, [x1dw; x1dw; x1up; x1up; x1dw]; color=:black, linewidth=1)
+    lines!(ax, [i; i], [x1up; x3up]; color=:black, linewidth=1.5)
+    lines!(ax, [i; i], [x1dw; x3dw]; color=:black, linewidth=1.5)
+    lines!(ax, [-1.0; 1.0]*width/7 .+ i, [x3up; x3up]; color=:black, linewidth=2)
+    lines!(ax, [-1.0; 1.0]*width/7 .+ i, [x3dw; x3dw]; color=:black, linewidth=2)
+
+    p_big = decompose(Point2f, Circle(Point2f(0), 1))
+    p_small = decompose(Point2f, Circle(Point2f(0), 0.5))
+    marker = Polygon(p_big, [p_small])
+    iout = findall(x .> x3up .|| x.< x3dw)
+    scatter!(ax, 0*x[iout] .+ i, x[iout]; marker=marker, color=:black, markersize=4)
+
+    return nothing
+end
