@@ -1,4 +1,4 @@
-Base.@kwdef struct UNITSDATA
+module Units
     # Length
     m = 1.0
     cm = 1e-2
@@ -33,6 +33,9 @@ Base.@kwdef struct UNITSDATA
     # Angular rate
     rpm = 2π/min
 
+    # Other
+    ppm = 1e-6
+
     # Constants
     SPEED_OF_LIGHT = 299792458.0        # [m/s] Speed of light
     AU = 149597871e3                    # [m] Astronomical unit
@@ -41,12 +44,12 @@ Base.@kwdef struct UNITSDATA
     PLANCK = 6.62607004E-34      	    # [m^2 kg/s] Planck's constant
     BOLTZMANN = 1.380649E-23            # [m^2 kg/s^2/K] Boltzmann constant
     STEFBOLTZMANN = 5.670374419e-8      # [W/m^2/K^4] Stefan-Boltzmann constant
+
+    # Conversion functions
+    export units, convertUnits
+    units(u::String) = eval(Meta.parse(u))
+    convertUnits(from::String, to::String) = eval(Meta.parse(from))./eval(Meta.parse(to))
+
+    units(val, u::String) = val.*units(u)
+    convertUnits(val, from::String, to::String) = val.*convertUnits(from, to)
 end
-
-_UNITSDATA_ = UNITSDATA()
-
-# Conversion functions
-units(u::String) = eval(Meta.parse("_UNITSDATA_."*u))
-units(val, u::String) = val.*units(u)
-convertUnits(from::String, to::String) = eval(Meta.parse("_UNITSDATA_."*from))./eval(Meta.parse("_UNITSDATA_."*to))
-convertUnits(val, from::String, to::String) = val.*convertUnits(from, to)

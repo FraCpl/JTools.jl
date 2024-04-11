@@ -194,11 +194,12 @@ end
 function plotBox!(ax, i, x; width=0.3, kwargs...)
     xF, F = ecdf(x)
 
-    μ = sum(x)/length(x)
-    x1up = xF[findfirst(F .≥ 0.68)]
-    x1dw = xF[findfirst(F .≥ 1 - 0.68)]
-    x3up = xF[findfirst(F .≥ 0.997)]
-    x3dw = xF[findfirst(F .≥ 1 - 0.997)]
+    μ = xF[findfirst(F .≥ 0.5)]# sum(x)/length(x)
+    x1up = xF[findfirst(F .≥ 0.75)]
+    x1dw = xF[findfirst(F .≥ 0.25)]
+    IR = x1up - x1dw
+    x3up = x1up + 1.5IR # xF[findfirst(F .≥ 0.997)]
+    x3dw = x1dw - 1.5IR # xF[findfirst(F .≥ 1 - 0.997)]
 
     violin!(ax, 0*x .+ i, x; datalimits=extrema, kwargs...)
     #boxplot!(ax,0*x .+ i, x; width=0.5)
@@ -210,11 +211,11 @@ function plotBox!(ax, i, x; width=0.3, kwargs...)
     lines!(ax, [-1.0; 1.0]*width/7 .+ i, [x3up; x3up]; color=:black, linewidth=2)
     lines!(ax, [-1.0; 1.0]*width/7 .+ i, [x3dw; x3dw]; color=:black, linewidth=2)
 
-    p_big = decompose(Point2f, Circle(Point2f(0), 1))
-    p_small = decompose(Point2f, Circle(Point2f(0), 0.5))
-    marker = Polygon(p_big, [p_small])
+    #p_big = decompose(Point2f, Circle(Point2f(0), 1))
+    #p_small = decompose(Point2f, Circle(Point2f(0), 0.5))
+    #marker = Polygon(p_big, [p_small])
     iout = findall(x .> x3up .|| x.< x3dw)
-    scatter!(ax, 0*x[iout] .+ i, x[iout]; marker=marker, color=:black, markersize=4)
+    scatter!(ax, 0*x[iout] .+ i, x[iout]; marker=:cross, color=:black, markersize=5)
 
     return nothing
 end
