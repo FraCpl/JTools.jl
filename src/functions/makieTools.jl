@@ -88,6 +88,16 @@ function plotMoon!(ax, pos=zeros(3), R=1.0; n=256)
         color=load(joinpath(@__DIR__, "../../assets/lroc_color_poles_2k.tif")), shading=NoShading)
 end
 
+function plotEarth!(ax, pos=zeros(3), R=1.0; n=256)
+    θ = LinRange(0, π, n)       # Colatitude
+    φ = LinRange(-π, π, 2n)     # Longitude
+    xe = [cos(φ)*sin(θ) for θ in θ, φ in φ]
+    ye = [sin(φ)*sin(θ) for θ in θ, φ in φ]
+    ze = [cos(θ) for θ in θ, φ in φ]
+    surface!(ax, R*xe .+ pos[1], R*ye .+ pos[2], R*ze .+ pos[3];
+        color=load(joinpath(@__DIR__, "../../assets/earth.jpg")), shading=NoShading)
+end
+
 function axisoff!(ax)
     hidedecorations!(ax)  # hides ticks, grid and lables
     hidespines!(ax)  # hide the frame
@@ -218,4 +228,8 @@ function plotBox!(ax, i, x; width=0.3, kwargs...)
     scatter!(ax, 0*x[iout] .+ i, x[iout]; marker=:cross, color=:black, markersize=5)
 
     return nothing
+end
+
+function lines3!(ax, pos; kwargs...)
+    lines!(ax, getindex.(pos, 1), getindex.(pos, 2), getindex.(pos, 3); kwargs...)
 end

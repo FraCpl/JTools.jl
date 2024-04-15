@@ -5,22 +5,28 @@ function rootFinder(
         maxIter=500,
         dxMax=[Inf for _ in 1:length(x0)],
         verbose=true,
-        useFiniteDiff=false,
-        )
+        method=:NewtonRaphson,     # :NewtonRaphson, :Broyden, :ModifiedBroyden
+        derivatives=:FiniteDiff,   # :ForwardDiff or :FiniteDiff (only for NewtonRaphson)
+    )
 
-    # Compute Jacobian and initialize variables
+    # Initialize variables
     x = copy(x0)
-    lx = length(x)
-    Jx = zeros(lx, lx)
-    fx = zeros(lx)
-    dx = zeros(lx)
+    y = f(x)
+    nx = length(x)
+    nf = length(y)
+    J = zeros(nf, nx)
+    H = zeros(nx, nf)
+    dx = zeros(nx)
+    yOld = copy(y)
 
     # Start iterations
     for iter in 1:maxIter
 
         # Check function value
-        fx .= f(x)
-        maxf = maximum(abs.(fx))
+        if iter > 1
+            y .= f(x)
+        end
+        maxf = maximum(abs.(y))
         if verbose
             @show iter, maxf
         end
@@ -29,12 +35,41 @@ function rootFinder(
         end
 
         # Compute and trim correction, if needed
-        if useFiniteDiff
-            Jx .= FiniteDiff.finite_difference_jacobian(f, x)
+        if method == :NewtonRaphson
+            # Newton-Raphson method
+            if derivatives == :FiniteDiff
+                # Numerical finite differences
+                J .= FiniteDiff.finite_difference_jacobian(f, x)
+            else
+                # Autodiff with ForwardDiff
+                J .= ForwardDiff.jacobian(f, x)
+            end
+            dx .= -J\y
+
+        elseif method == :Broyden
+            # Broyden method
+            # https://en.wikipedia.org/wiki/Broyden%27s_method
+            if iter == 1
+                J .= FiniteDiff.finite_difference_jacobian(f, x)
+            else
+                J .+= 1/(dx'*dx)*(y - yOld - J*dx)*dx'
+            end
+            dx .= -J\y
+            yOld .= copy(y)
+
         else
-            Jx .= ForwardDiff.jacobian(f, x)
+            # Modified Broyden method
+            # https://documentation.help/GMAT/DifferentialCorrector.html
+            # https://en.wikipedia.org/wiki/Broyden%27s_method
+            if iter == 1
+                H .= inv(FiniteDiff.finite_difference_jacobian(f, x))
+            else
+                H .+= (dx - H*(y - yOld))*(dx'*H/(dx'*H*(y - yOld)))
+            end
+            dx .= -H*y
+            yOld .= copy(y)
         end
-        dx .= Jx\fx
+
         for i in eachindex(dx)
             if abs(dx[i]) > dxMax[i]
                 dx[i] = sign(dx[i])*dxMax[i]
@@ -42,12 +77,12 @@ function rootFinder(
         end
 
         # Apply correction
-        x .-= dx
+        x .+= dx
     end
 
     # Return solution
     if verbose
-        @show "Solution", x, f(x)
+        println("Solution: x = $x, f(x) = $(f(x))")
     end
     return x
 end

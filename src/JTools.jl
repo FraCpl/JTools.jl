@@ -12,8 +12,8 @@ using SpecialFunctions
 
 export ecdf, goldenSectionSearch, rootFinder, ode38, trapz, cumtrapz
 export dm2dv, dm2dt, dv2dm, dv2dt
-export theme_fra, plotMoon!, axisoff!, plotframe!, transformModel, sensorFovModel, cuboidModel
-export plotEcdf, plotEcdf!, plotBox, plotBox!
+export theme_fra, plotMoon!, plotEarth!, axisoff!, plotframe!, transformModel, sensorFovModel, cuboidModel
+export plotEcdf, plotEcdf!, plotBox, plotBox!, lines3!
 export nicholsgrid
 export crossmat, logrange, mag2db, db2mag, unwrap!
 export lsq
