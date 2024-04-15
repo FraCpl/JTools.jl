@@ -76,26 +76,22 @@ end
 #using GLMakie
 #using JTools
 #f = Figure()
-#ax = Axis3(f[1, 1]; aspect = (1, 1, 1))
+#ax = LScene(f[1, 1]; show_axis=false)
 #plotMoon!(ax)
-function plotMoon!(ax, pos=zeros(3), R=1.0; n=256)
-    θ = LinRange(0, π, n)       # Colatitude
-    φ = LinRange(-π, π, 2n)     # Longitude
-    xe = [cos(φ)*sin(θ) for θ in θ, φ in φ]
-    ye = [sin(φ)*sin(θ) for θ in θ, φ in φ]
-    ze = [cos(θ) for θ in θ, φ in φ]
-    surface!(ax, R*xe .+ pos[1], R*ye .+ pos[2], R*ze .+ pos[3];
-        color=load(joinpath(@__DIR__, "../../assets/lroc_color_poles_2k.tif")), shading=NoShading)
+function plotMoon!(ax, radius=1.0, pos_I=zeros(3), R_IM=I; n=256)
+    plotPlanet!(ax, joinpath(@__DIR__, "../../assets/lroc_color_poles_2k.tif"), radius, pos_I, R_IM; n=n)
 end
 
-function plotEarth!(ax, pos=zeros(3), R=1.0; n=256)
+function plotEarth!(ax, radius=1.0, pos_I=zeros(3), R_IE=I; n=256)
+    plotPlanet!(ax, joinpath(@__DIR__, "../../assets/earth.jpg"), radius, pos_I, R_IE; n=n)
+end
+
+function plotPlanet!(ax, texture, radius=1.0, pos_I=zeros(3), R_IP=I; n=256)
     θ = LinRange(0, π, n)       # Colatitude
     φ = LinRange(-π, π, 2n)     # Longitude
-    xe = [cos(φ)*sin(θ) for θ in θ, φ in φ]
-    ye = [sin(φ)*sin(θ) for θ in θ, φ in φ]
-    ze = [cos(θ) for θ in θ, φ in φ]
-    surface!(ax, R*xe .+ pos[1], R*ye .+ pos[2], R*ze .+ pos[3];
-        color=load(joinpath(@__DIR__, "../../assets/earth.jpg")), shading=NoShading)
+    posBody_I = [R_IP*(radius*[cos(φ)*sin(θ); sin(φ)*sin(θ); cos(θ)]) + pos_I  for θ in θ, φ in φ]
+    surface!(ax, getindex.(posBody_I, 1), getindex.(posBody_I, 2), getindex.(posBody_I, 3);
+        color=load(texture), shading=NoShading)
 end
 
 function axisoff!(ax)
@@ -103,19 +99,19 @@ function axisoff!(ax)
     hidespines!(ax)  # hide the frame
 end
 
-# Plot axes of frame F in world (image) frame W
+# Plot axes of frame F in image (world) frame I
 # CAUTION: This seems to make MAKIE crash
-function plotframe!(ax, pos_W, R_WF, length=1)
-    xF_W = R_WF[:, 1]*length
-    yF_W = R_WF[:, 2]*length
-    zF_W = R_WF[:, 3]*length
+function plotframe!(ax, pos_I, R_IF, length=1)
+    xF_W = R_IF[:, 1]*length
+    yF_W = R_IF[:, 2]*length
+    zF_W = R_IF[:, 3]*length
     # CAUTION: This seems to make MAKIE crash
-    #arrows!(ax, [pos_W[1]], [pos_W[2]], [pos_W[3]], [xF_W[1]], [xF_W[2]], [xF_W[3]]; arrowsize=0.1*length, lengthscale=length, color=:red)
-    #arrows!(ax, [pos_W[1]], [pos_W[2]], [pos_W[3]], [yF_W[1]], [yF_W[2]], [yF_W[3]]; arrowsize=0.1*length, lengthscale=length, color=:blue)
-    #arrows!(ax, [pos_W[1]], [pos_W[2]], [pos_W[3]], [zF_W[1]], [zF_W[2]], [zF_W[3]]; arrowsize=0.1*length, lengthscale=length, color=:green)
-    lines!(ax, pos_W[1] .+ [0.0, xF_W[1]], pos_W[2] .+ [0.0, xF_W[2]], pos_W[3] .+ [0.0, xF_W[3]]; color=:red)
-    lines!(ax, pos_W[1] .+ [0.0, yF_W[1]], pos_W[2] .+ [0.0, yF_W[2]], pos_W[3] .+ [0.0, yF_W[3]]; color=:blue)
-    lines!(ax, pos_W[1] .+ [0.0, zF_W[1]], pos_W[2] .+ [0.0, zF_W[2]], pos_W[3] .+ [0.0, zF_W[3]]; color=:green)
+    #arrows!(ax, [pos_I[1]], [pos_I[2]], [pos_I[3]], [xF_W[1]], [xF_W[2]], [xF_W[3]]; arrowsize=0.1*length, lengthscale=length, color=:red)
+    #arrows!(ax, [pos_I[1]], [pos_I[2]], [pos_I[3]], [yF_W[1]], [yF_W[2]], [yF_W[3]]; arrowsize=0.1*length, lengthscale=length, color=:blue)
+    #arrows!(ax, [pos_I[1]], [pos_I[2]], [pos_I[3]], [zF_W[1]], [zF_W[2]], [zF_W[3]]; arrowsize=0.1*length, lengthscale=length, color=:green)
+    lines!(ax, pos_I[1] .+ [0.0, xF_W[1]], pos_I[2] .+ [0.0, xF_W[2]], pos_I[3] .+ [0.0, xF_W[3]]; color=:red)
+    lines!(ax, pos_I[1] .+ [0.0, yF_W[1]], pos_I[2] .+ [0.0, yF_W[2]], pos_I[3] .+ [0.0, yF_W[3]]; color=:blue)
+    lines!(ax, pos_I[1] .+ [0.0, zF_W[1]], pos_I[2] .+ [0.0, zF_W[2]], pos_I[3] .+ [0.0, zF_W[3]]; color=:green)
 end
 
 # Transform 3D model
