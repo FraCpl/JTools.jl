@@ -19,6 +19,7 @@ export crossmat, logrange, mag2db, db2mag, unwrap!
 export lsq
 export ransac
 export montecarloNsim, montecarloConfidence
+export gradientDescent
 include("functions/trapz.jl")
 include("functions/ecdf.jl")
 include("functions/goldenSectionSearch.jl")
@@ -30,6 +31,7 @@ include("functions/math.jl")
 include("functions/lsq.jl")
 include("functions/ransac.jl")
 include("functions/montecarlo.jl")
+include("functions/gradientDescent.jl")
 
 include("functions/units.jl")
 using .Units

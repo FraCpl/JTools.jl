@@ -62,7 +62,7 @@ function rootFinder(
             # https://documentation.help/GMAT/DifferentialCorrector.html
             # https://en.wikipedia.org/wiki/Broyden%27s_method
             if iter == 1
-                H .= inv(FiniteDiff.finite_difference_jacobian(f, x))
+                H .= pinv(FiniteDiff.finite_difference_jacobian(f, x))  # Pinv also works for non square matrices
             else
                 H .+= (dx - H*(y - yOld))*(dx'*H/(dx'*H*(y - yOld)))
             end
