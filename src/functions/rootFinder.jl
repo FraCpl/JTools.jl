@@ -1,3 +1,12 @@
+"""
+    x = rootFinder(f, x0)
+
+Finds the solution ``x`` to the nonlinear multivariate root finding problem f(x) = 0,
+given as input an initial guess ``x0``.
+
+Author: F. Capolupo\\
+European Space Agency, 2024
+"""
 function rootFinder(
         f::Function,
         x0::Vector;
