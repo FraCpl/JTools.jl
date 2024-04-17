@@ -14,7 +14,7 @@ function rootFinder(
         maxIter=500,
         dxMax=[Inf for _ in 1:length(x0)],
         verbose=true,
-        method=:NewtonRaphson,     # :NewtonRaphson, :Broyden, :ModifiedBroyden
+        method=:Broyden,     # :NewtonRaphson, :Broyden, :ModifiedBroyden
         derivatives=:FiniteDiff,   # :ForwardDiff or :FiniteDiff (only for NewtonRaphson)
     )
 
