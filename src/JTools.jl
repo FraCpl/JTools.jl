@@ -9,6 +9,7 @@ using GeometryBasics
 using LinearAlgebra
 using Random
 using SpecialFunctions
+using FFTW
 
 export ecdf, goldenSectionSearch, rootFinder, ode38, trapz, cumtrapz
 export dm2dv, dm2dt, dv2dm, dv2dt
@@ -20,6 +21,7 @@ export lsq
 export ransac
 export montecarloNsim, montecarloConfidence
 export gradientDescent
+export psd, psd2var
 include("functions/trapz.jl")
 include("functions/ecdf.jl")
 include("functions/goldenSectionSearch.jl")
@@ -32,6 +34,7 @@ include("functions/lsq.jl")
 include("functions/ransac.jl")
 include("functions/montecarlo.jl")
 include("functions/gradientDescent.jl")
+include("functions/psd.jl")
 
 include("functions/units.jl")
 using .Units

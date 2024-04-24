@@ -35,11 +35,15 @@ module Units
 
     # Other
     ppm = 1e-6
+    g = 9.80665
+    g0 = g
+    mg = g*1e-3
+    μg = g*1e-6
+    ng = g*1e-9
 
     # Constants
     SPEED_OF_LIGHT = 299792458.0        # [m/s] Speed of light
     AU = 149597871e3                    # [m] Astronomical unit
-    G0 = 9.807                          # [m/s^2] Earth gravity
     G = 6.67384e-11         	        # [m^3/kg/s^2] Universal gravitational constant
     PLANCK = 6.62607004E-34      	    # [m^2 kg/s] Planck's constant
     BOLTZMANN = 1.380649E-23            # [m^2 kg/s^2/K] Boltzmann constant
