@@ -133,6 +133,11 @@ function sensorFovModel(; pos_I=zeros(3), R_IS=I, FOV=(40π/180, 40π/180), leng
     return GeometryBasics.Mesh(v, f)
 end
 
+function plotCuboid!(ax, lx=1.0, ly=1.0, lz=1.0, pos_I=zeros(3), R_IB=I; kwargs...)
+    m = cuboidModel(lx, ly, lz; pos_I=pos_I, R_IB=R_IB)
+    mesh!(ax, m; kwargs...)
+end
+
 function cuboidModel(lx, ly, lz; pos_I=zeros(3), R_IB=I)
     v = [Point3f(pos_I + R_IB*[+lx/2; -ly/2; -lz/2]),
          Point3f(pos_I + R_IB*[+lx/2; +ly/2; -lz/2]),
@@ -145,6 +150,45 @@ function cuboidModel(lx, ly, lz; pos_I=zeros(3), R_IB=I)
     ]
     f = [QuadFace([1, 2, 3, 4]), QuadFace([2, 3, 7, 6]), QuadFace([7, 8, 5, 6]), QuadFace([1, 4, 8, 5]), QuadFace([4, 3, 7, 8]), QuadFace([1, 2, 6, 5])]
     return GeometryBasics.Mesh(v, f)
+end
+
+function plotCone!(ax, posTip=zeros(3), dirAxis=[0.0; 0.0; 1.0]; height=1.0, fullAngle=40π/180, kwargs...)
+    N = 200
+    z = normalize(dirAxis)
+    x = normalize(randn(3) × z)
+    y = z × x
+    R = [x y z]
+    r = height*tan(fullAngle/2)
+    circ = Ref(posTip) .+ Ref(R).*[[r*sin(θ); r*cos(θ); height] for θ in range(0, 2π, N)]
+    lower = fill(Point3f(posTip[1], posTip[2], posTip[3]), N)
+    upper = [Point3f(c[1], c[2], c[3]) for c in circ]
+    band!(ax, lower, upper; kwargs...)
+    lines!(ax, upper; color=:black)
+end
+
+function plotCylinder!(ax, posCenter=zeros(3), dirAxis=[0.0; 0.0; 1.0]; height=1.0, radius=1.0, kwargs...)
+    N = 200
+    z = normalize(dirAxis)
+    x = normalize(randn(3) × z)
+    y = z × x
+    R = [x y z]
+
+    circup = Ref(posCenter) .+ Ref(R).*[[radius*sin(θ); radius*cos(θ); +height/2] for θ in range(0, 2π, N)]
+    circdw = Ref(posCenter) .+ Ref(R).*[[radius*sin(θ); radius*cos(θ); -height/2] for θ in range(0, 2π, N)]
+    upper = [Point3f(c[1], c[2], c[3]) for c in circup]
+    lower = [Point3f(c[1], c[2], c[3]) for c in circdw]
+    band!(ax, lower, upper; kwargs...)
+
+    circupc = posCenter + R*[0.0; 0.0; height/2]
+    upc = fill(Point3f(circupc[1], circupc[2], circupc[3]), N)
+    band!(ax, upc, upper; kwargs...)
+
+    circdwn = posCenter - R*[0.0; 0.0; height/2]
+    upd = fill(Point3f(circdwn[1], circdwn[2], circdwn[3]), N)
+    band!(ax, upd, lower; kwargs...)
+
+    lines!(ax, upper; color=:black)
+    lines!(ax, lower; color=:black)
 end
 
 function nicholsgrid(f; center::Int=-1)
