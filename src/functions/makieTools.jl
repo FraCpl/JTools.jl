@@ -78,20 +78,20 @@ end
 #f = Figure()
 #ax = LScene(f[1, 1]; show_axis=false)
 #plotMoon!(ax)
-function plotMoon!(ax, radius=1.0, pos_I=zeros(3), R_IM=I; n=256)
-    plotPlanet!(ax, joinpath(@__DIR__, "../../assets/lroc_color_poles_2k.tif"), radius, pos_I, R_IM; n=n)
+function plotMoon!(ax, radius=1.0, pos_I=zeros(3), R_IM=I; n=256, kwargs...)
+    plotPlanet!(ax, joinpath(@__DIR__, "../../assets/lroc_color_poles_2k.tif"), radius, pos_I, R_IM; n=n, kwargs...)
 end
 
-function plotEarth!(ax, radius=1.0, pos_I=zeros(3), R_IE=I; n=256)
-    plotPlanet!(ax, joinpath(@__DIR__, "../../assets/earth.jpg"), radius, pos_I, R_IE; n=n)
+function plotEarth!(ax, radius=1.0, pos_I=zeros(3), R_IE=I; n=256, kwargs...)
+    plotPlanet!(ax, joinpath(@__DIR__, "../../assets/earth.jpg"), radius, pos_I, R_IE; n=n, kwargs...)
 end
 
-function plotPlanet!(ax, texture, radius=1.0, pos_I=zeros(3), R_IP=I; n=256)
+function plotPlanet!(ax, texture, radius=1.0, pos_I=zeros(3), R_IP=I; n=256, kwargs...)
     θ = LinRange(0, π, n)       # Colatitude
     φ = LinRange(-π, π, 2n)     # Longitude
     posBody_I = [R_IP*(radius*[cos(φ)*sin(θ); sin(φ)*sin(θ); cos(θ)]) + pos_I  for θ in θ, φ in φ]
     surface!(ax, getindex.(posBody_I, 1), getindex.(posBody_I, 2), getindex.(posBody_I, 3);
-        color=load(texture), shading=NoShading)
+        color=load(texture), shading=NoShading, kwargs...)
 end
 
 function axisoff!(ax)
@@ -101,17 +101,15 @@ end
 
 # Plot axes of frame F in image (world) frame I
 # CAUTION: This seems to make MAKIE crash
-function plotframe!(ax, pos_I, R_IF, length=1)
-    xF_W = R_IF[:, 1]*length
-    yF_W = R_IF[:, 2]*length
-    zF_W = R_IF[:, 3]*length
-    # CAUTION: This seems to make MAKIE crash
-    #arrows!(ax, [pos_I[1]], [pos_I[2]], [pos_I[3]], [xF_W[1]], [xF_W[2]], [xF_W[3]]; arrowsize=0.1*length, lengthscale=length, color=:red)
-    #arrows!(ax, [pos_I[1]], [pos_I[2]], [pos_I[3]], [yF_W[1]], [yF_W[2]], [yF_W[3]]; arrowsize=0.1*length, lengthscale=length, color=:blue)
-    #arrows!(ax, [pos_I[1]], [pos_I[2]], [pos_I[3]], [zF_W[1]], [zF_W[2]], [zF_W[3]]; arrowsize=0.1*length, lengthscale=length, color=:green)
-    lines!(ax, pos_I[1] .+ [0.0, xF_W[1]], pos_I[2] .+ [0.0, xF_W[2]], pos_I[3] .+ [0.0, xF_W[3]]; color=:red)
-    lines!(ax, pos_I[1] .+ [0.0, yF_W[1]], pos_I[2] .+ [0.0, yF_W[2]], pos_I[3] .+ [0.0, yF_W[3]]; color=:blue)
-    lines!(ax, pos_I[1] .+ [0.0, zF_W[1]], pos_I[2] .+ [0.0, zF_W[2]], pos_I[3] .+ [0.0, zF_W[3]]; color=:green)
+function plotframe!(ax, pos_I, R_IF, length=1;
+        colors=[:red, :blue, :green], sub="",
+        labels=[rich("x", subscript(sub)), rich("y", subscript(sub)), rich("z", subscript(sub))],
+        labelspace=1.1)
+    for i in 1:3
+        u = R_IF[:, i]*length
+        lines3!(ax, [pos_I, pos_I + u]; color=colors[i])
+        text!(ax, pos_I[1] + labelspace*u[1], pos_I[2] + labelspace*u[2], pos_I[3] + labelspace*u[3]; text=labels[i], align=(:center, :center), color=colors[i])
+    end
 end
 
 # Transform 3D model

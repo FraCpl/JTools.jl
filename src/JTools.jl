@@ -52,7 +52,7 @@ include("functions/gradientDescent.jl")
 export psd, psd2var
 include("functions/psd.jl")
 
-export rcsMixMatrix, rcsAllocation, rcsAnalysis, rcsEnvelope, plotRcs, plotRcs!
+export rcsMixMatrix, rcsAllocation, rcsAnalysis, rcsEnvelope, plotRcs, plotRcs!, rcsAllocationSimplex
 include("functions/rcsTools.jl")
 
 include("functions/units.jl")
