@@ -31,10 +31,10 @@ include("functions/rocketEqs.jl")
 
 export theme_fra, plotMoon!, plotEarth!, axisoff!, plotframe!, transformModel, sensorFovModel
 export cuboidModel, plotCuboid!, plotCone!, plotCylinder!, nicholsgrid, plotEcdf, plotEcdf!
-export plotBox, plotBox!, lines3!
+export plotBox, plotBox!, lines3!, multilines!
 include("functions/makieTools.jl")
 
-export crossmat, logrange, mag2db, db2mag, unwrap!
+export crossmat, logrange, mag2db, db2mag, unwrap!, modd, isMultiple, signum
 include("functions/math.jl")
 
 export lsq
@@ -54,6 +54,9 @@ include("functions/psd.jl")
 
 export rcsMixMatrix, rcsAllocation, rcsAnalysis, rcsEnvelope, plotRcs, plotRcs!, rcsAllocationSimplex
 include("functions/rcsTools.jl")
+
+export includedir
+include("functions/utils.jl")
 
 include("functions/units.jl")
 using .Units

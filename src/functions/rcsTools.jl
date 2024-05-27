@@ -1,9 +1,18 @@
 # Other possible solvers: GLPK, SCS, ECOS
 
-function rcsMixMatrix(posRCS_B, dirRCS_B, forceRCS=ones(length(posRCS_B)), posRef_B=zeros(3))
-    n = length(posRCS_B)
-    dir = normalize.(dirRCS_B)
-    pos = posRCS_B .- Ref(posRef_B)
+"""
+    My = rcsMixMatrix(posRCS, dirRCS, forceRCS, posRef)
+
+Compute the RCS mixing matrix ```My``` with respect to ```posRef```, so that:
+
+[Force; Torque] = ```My```*y
+
+with 0 ≤ y ≤ 1.
+"""
+function rcsMixMatrix(posRCS, dirRCS, forceRCS=ones(length(posRCS)), posRef=zeros(3))
+    n = length(posRCS)
+    dir = normalize.(dirRCS)
+    pos = posRCS .- Ref(posRef)
     My = zeros(6, n)
     for i in 1:n
         My[:, i] = forceRCS[i]*[dir[i]; pos[i] × dir[i]]
@@ -11,39 +20,16 @@ function rcsMixMatrix(posRCS_B, dirRCS_B, forceRCS=ones(length(posRCS_B)), posRe
     return My
 end
 
-function rcsAllocation(u, My, c=ones(size(My, 2)))
-    n = size(My, 2)
-    y = Variable(n)
-    problem = minimize(c'*y, [My*y == u, y ≤ ones(n), y ≥ zeros(n)])
-    Convex.solve!(problem, ECOS.Optimizer(); silent_solver=true)
-    return y.value
-end
-
 function rcsAnalysis(My; unconstrained=false)
 
-    # Compute pure force & torque along X, Y, and Z
-    forceRCS = [norm(u[1:3]) for u in eachcol(My)]
-    n = size(My, 2)
-    Umax = zeros(6); Emax = zeros(6); Umin = zeros(6); Emin = zeros(6)
-    y = Variable(n)
-    Mk = zeros(6, n)
-    for idx in 1:6
-        c = zeros(6)
-        c[idx] = 1.0
-        if !unconstrained
-            Mk .= (I - diagm(c))*My
-        end
+    v = [[+1.0; 0.0; 0.0], [0.0; +1.0; 0.0], [0.0; 0.0; +1.0],
+         [-1.0; 0.0; 0.0], [0.0; -1.0; 0.0], [0.0; 0.0; -1.0]]
 
-        problem = maximize(c'*My*y, [Mk*y == zeros(6), y ≤ ones(n), y ≥ zeros(n)])
-        Convex.solve!(problem, ECOS.Optimizer(); silent_solver=true)
-        Umax[idx] = problem.optval
-        Emax[idx] = Umax[idx]./sum(y.value.*forceRCS)
-
-        problem = minimize(c'*My*y, [Mk*y == zeros(6), y ≤ ones(n), y ≥ zeros(n)])
-        Convex.solve!(problem, ECOS.Optimizer(); silent_solver=true)
-        Umin[idx] = problem.optval
-        Emin[idx] = -Umin[idx]./sum(y.value.*forceRCS)
-    end
+    Uforce, Utorque, Eforce, Etorque = rcsEnvelope(My; unconstrained=unconstrained, v=v)
+    Umax = [norm.(Uforce[1:3]); norm.(Utorque[1:3])]
+    Umin = -[norm.(Uforce[4:6]); norm.(Utorque[4:6])]
+    Emax = [norm.(Eforce[1:3]); norm.(Etorque[1:3])]
+    Emin = [norm.(Eforce[4:6]); norm.(Etorque[4:6])]
 
     type = unconstrained ? "Unconstrained " : "Pure "
     println(type*"Force")
@@ -64,7 +50,7 @@ function rcsAnalysis(My; unconstrained=false)
     return nothing
 end
 
-function sampleEvenlySphere(N = 100; includeAxes=true)
+function sampleEvenlySphere(N=100; includeAxes=true)
     a = 4π/N
     d = √a
     Mθ = round(Int, π/d)
@@ -93,51 +79,62 @@ function sampleEvenlySphere(N = 100; includeAxes=true)
     return r
 end
 
-function rcsEnvelope(My; N=1000, unconstrained=false)
-    u = sampleEvenlySphere(N; includeAxes=true)
+function rcsEnvelope(My; N=1000, unconstrained=false, v=sampleEvenlySphere(N; includeAxes=true))
 
-    forceRCS = [norm(u[1:3]) for u in eachcol(My)]
+    v .= normalize.(v)
+
+    forceRCS = [norm(f[1:3]) for f in eachcol(My)]
     n = size(My, 2)
-    Uforce = 0.0*u
-    Eforce = copy(Uforce)
-    Utorque = copy(Uforce)
-    Etorque = copy(Uforce)
+    Uforce = deepcopy(v)
+    Eforce = deepcopy(v)
+    Utorque = deepcopy(v)
+    Etorque = deepcopy(v)
     y = Variable(n)
 
-    for k in eachindex(u)
-        # Force envelope
+    for k in eachindex(v)
+        # Force envelope - Maximize force along given direction v[k]
         if unconstrained
-            problem = maximize(u[k]'*My[1:3, :]*y, [y ≤ ones(n), y ≥ zeros(n)])
+            problem = maximize(v[k]'*My[1:3, :]*y, [y ≤ ones(n), y ≥ zeros(n)])
         else
-            problem = maximize(u[k]'*My[1:3, :]*y, [(I - u[k]*u[k]')*My[1:3, :]*y == zeros(3), My[4:6, :]*y == zeros(3), y ≤ ones(n), y ≥ zeros(n)])
+            problem = maximize(v[k]'*My[1:3, :]*y, [(I - v[k]*v[k]')*My[1:3, :]*y == zeros(3), My[4:6, :]*y == zeros(3), y ≤ ones(n), y ≥ zeros(n)])
         end
         Convex.solve!(problem, ECOS.Optimizer(); silent_solver=true)
-        Uforce[k] .= problem.optval*u[k]
-        Eforce[k] .= Uforce[k]./sum(y.value.*forceRCS)
+        Uforce[k] .*= problem.optval
+        Eforce[k] .*= problem.optval/sum(y.value.*forceRCS)
+        @show Uforce[k]
 
-        # Torque envelope
+        # Torque envelope - Maximize torque along given direction v[k]
         if unconstrained
-            problem = maximize(u[k]'*My[4:6, :]*y, [y ≤ ones(n), y ≥ zeros(n)])
+            problem = maximize(v[k]'*My[4:6, :]*y, [y ≤ ones(n), y ≥ zeros(n)])
         else
-            problem = maximize(u[k]'*My[4:6, :]*y, [(I - u[k]*u[k]')*My[4:6, :]*y == zeros(3), My[1:3, :]*y == zeros(3), y ≤ ones(n), y ≥ zeros(n)])
+            problem = maximize(v[k]'*My[4:6, :]*y, [(I - v[k]*v[k]')*My[4:6, :]*y == zeros(3), My[1:3, :]*y == zeros(3), y ≤ ones(n), y ≥ zeros(n)])
         end
         Convex.solve!(problem, ECOS.Optimizer(); silent_solver=true)
-        Utorque[k] .= problem.optval*u[k]
-        Etorque[k] .= Utorque[k]./sum(y.value.*forceRCS)
+        Utorque[k] .*= problem.optval
+        Etorque[k] .*= problem.optval/sum(y.value.*forceRCS)
     end
 
     return Uforce, Utorque, Eforce, Etorque
 end
 
-function plotRcs(posRCS_B, dirRCS_B; scale=1.0)
+function plotRcs(posRCS, dirRCS; scale=1.0)
     f = Figure()
     ax = LScene(f[1, 1])
-    plotRcs!.(ax, posRCS_B, dirRCS_B; height=scale)
+    plotRcs!.(ax, posRCS, dirRCS; height=scale)
     return f, ax
 end
 
-function plotRcs!(ax, posRCS_B, dirRCS_B; scale=1.0)
-    plotCone!(ax, posRCS_B, -dirRCS_B; height=scale)
+function plotRcs!(ax, posRCS, dirRCS; scale=1.0)
+    plotCone!(ax, posRCS, -dirRCS; height=scale)
+end
+
+
+function rcsAllocation(u, My, c=ones(size(My, 2)))
+    n = size(My, 2)
+    y = Variable(n)
+    problem = minimize(c'*y, [My*y == u, y ≤ ones(n), y ≥ zeros(n)])
+    Convex.solve!(problem, ECOS.Optimizer(); silent_solver=true)
+    return y.value
 end
 
 #runTMFSimplexMIT

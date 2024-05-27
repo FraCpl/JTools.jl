@@ -271,3 +271,9 @@ end
 function lines3!(ax, pos; kwargs...)
     lines!(ax, getindex.(pos, 1), getindex.(pos, 2), getindex.(pos, 3); kwargs...)
 end
+
+function multilines!(ax, x, y, idx=1:lastindex(y[1]); kwargs...)
+    for i in idx
+        lines!(ax, x, getindex.(y, i); kwargs...)
+    end
+end
