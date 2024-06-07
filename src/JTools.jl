@@ -31,7 +31,7 @@ include("functions/rocketEqs.jl")
 
 export theme_fra, plotMoon!, plotEarth!, axisoff!, plotframe!, transformModel, sensorFovModel
 export cuboidModel, plotCuboid!, plotCone!, plotCylinder!, nicholsgrid, plotEcdf, plotEcdf!
-export plotBox, plotBox!, lines3!, multilines!
+export plotBox, plotBox!, lines3!, multilines!, plotSphere!, plotSensorFov!
 include("functions/makieTools.jl")
 
 export crossmat, logrange, mag2db, db2mag, unwrap!, modd, isMultiple, signum

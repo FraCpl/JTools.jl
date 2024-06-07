@@ -101,7 +101,6 @@ function rcsEnvelope(My; N=1000, unconstrained=false, v=sampleEvenlySphere(N; in
         Convex.solve!(problem, ECOS.Optimizer(); silent_solver=true)
         Uforce[k] .*= problem.optval
         Eforce[k] .*= problem.optval/sum(y.value.*forceRCS)
-        @show Uforce[k]
 
         # Torque envelope - Maximize torque along given direction v[k]
         if unconstrained
@@ -118,14 +117,14 @@ function rcsEnvelope(My; N=1000, unconstrained=false, v=sampleEvenlySphere(N; in
 end
 
 function plotRcs(posRCS, dirRCS; scale=1.0)
-    f = Figure()
+    f = Figure(); display(f)
     ax = LScene(f[1, 1])
-    plotRcs!.(ax, posRCS, dirRCS; height=scale)
+    plotRcs!(ax, posRCS, dirRCS; scale=scale)
     return f, ax
 end
 
 function plotRcs!(ax, posRCS, dirRCS; scale=1.0)
-    plotCone!(ax, posRCS, -dirRCS; height=scale)
+    plotCone!.(ax, posRCS, -dirRCS; height=scale)
 end
 
 

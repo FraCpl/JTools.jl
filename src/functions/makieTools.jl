@@ -94,6 +94,14 @@ function plotPlanet!(ax, texture, radius=1.0, pos_I=zeros(3), R_IP=I; n=256, kwa
         color=load(texture), shading=NoShading, kwargs...)
 end
 
+function plotSphere!(ax, radius=1.0, pos_I=zeros(3), n=256, kwargs...)
+    θ = LinRange(0, π, n)       # Colatitude
+    φ = LinRange(-π, π, 2n)     # Longitude
+    posBody_I = [radius*[cos(φ)*sin(θ); sin(φ)*sin(θ); cos(θ)] + pos_I  for θ in θ, φ in φ]
+    surface!(ax, getindex.(posBody_I, 1), getindex.(posBody_I, 2), getindex.(posBody_I, 3);
+        shading=NoShading, kwargs...)
+end
+
 function axisoff!(ax)
     hidedecorations!(ax)  # hides ticks, grid and lables
     hidespines!(ax)  # hide the frame
@@ -101,7 +109,7 @@ end
 
 # Plot axes of frame F in image (world) frame I
 # CAUTION: This seems to make MAKIE crash
-function plotframe!(ax, pos_I, R_IF, length=1;
+function plotframe!(ax, pos_I=zeros(3), R_IF=Matrix(1.0I, 3, 3), length=1;
         colors=[:red, :blue, :green], sub="",
         labels=[rich("x", subscript(sub)), rich("y", subscript(sub)), rich("z", subscript(sub))],
         labelspace=1.1)
@@ -119,7 +127,8 @@ function transformModel(m, pos_I, R_IB=I, scale=1.0)
     return GeometryBasics.Mesh(mt, f)
 end
 
-function sensorFovModel(; pos_I=zeros(3), R_IS=I, FOV=(40π/180, 40π/180), length=1)
+# FOV is full field of view
+function sensorFovModel(; pos_I=zeros(3), R_IS=I, FOV=(40π/180, 40π/180), length=1.0)
     x = length*tan(FOV[1]/2)
     y = length*tan(FOV[2]/2)
     v = [Point3f(pos_I + [0.0, 0.0, 0.0]),
@@ -129,6 +138,11 @@ function sensorFovModel(; pos_I=zeros(3), R_IS=I, FOV=(40π/180, 40π/180), leng
           Point3f(pos_I + R_IS*[+x, +y, length]),]
     f = [TriangleFace([1, 2, 3]), TriangleFace([1, 3, 4]), TriangleFace([1, 4, 5]), TriangleFace([1, 5, 2])]
     return GeometryBasics.Mesh(v, f)
+end
+
+# FOV is full field of view
+function plotSensorFov!(ax, pos_I=zeros(3), R_IS=I, FOV=(40π/180, 40π/180); length=1.0, kwargs...)
+    mesh!(ax, sensorFovModel(pos_I=pos_I, R_IS=R_IS, FOV=FOV, length=length); kwargs...)
 end
 
 function plotCuboid!(ax, lx=1.0, ly=1.0, lz=1.0, pos_I=zeros(3), R_IB=I; kwargs...)
@@ -164,7 +178,7 @@ function plotCone!(ax, posTip=zeros(3), dirAxis=[0.0; 0.0; 1.0]; height=1.0, ful
     lines!(ax, upper; color=:black)
 end
 
-function plotCylinder!(ax, posCenter=zeros(3), dirAxis=[0.0; 0.0; 1.0]; height=1.0, radius=1.0, kwargs...)
+function plotCylinder!(ax, posCenter=zeros(3), dirAxis=[0.0; 0.0; 1.0]; height=1.0, radius=1.0, noedges=false, kwargs...)
     N = 200
     z = normalize(dirAxis)
     x = normalize(randn(3) × z)
@@ -185,8 +199,10 @@ function plotCylinder!(ax, posCenter=zeros(3), dirAxis=[0.0; 0.0; 1.0]; height=1
     upd = fill(Point3f(circdwn[1], circdwn[2], circdwn[3]), N)
     band!(ax, upd, lower; kwargs...)
 
-    lines!(ax, upper; color=:black)
-    lines!(ax, lower; color=:black)
+    if !noedges
+        lines!(ax, upper; color=:black)
+        lines!(ax, lower; color=:black)
+    end
 end
 
 function nicholsgrid(f; center::Int=-1)
