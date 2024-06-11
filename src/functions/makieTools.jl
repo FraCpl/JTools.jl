@@ -160,7 +160,22 @@ function cuboidModel(lx, ly, lz; pos_I=zeros(3), R_IB=I)
          Point3f(pos_I + R_IB*[-lx/2; +ly/2; +lz/2]),
          Point3f(pos_I + R_IB*[-lx/2; -ly/2; +lz/2]),
     ]
-    f = [QuadFace([1, 2, 3, 4]), QuadFace([2, 3, 7, 6]), QuadFace([7, 8, 5, 6]), QuadFace([1, 4, 8, 5]), QuadFace([4, 3, 7, 8]), QuadFace([1, 2, 6, 5])]
+    #f = [
+    #    QuadFace([1, 2, 3, 4]),
+    #    QuadFace([2, 3, 7, 6]),
+    #    QuadFace([7, 8, 5, 6]),
+    #    QuadFace([1, 4, 8, 5]),
+    #    QuadFace([4, 3, 7, 8]),
+    #    QuadFace([1, 2, 6, 5]),
+    #]
+    f = [
+        TriangleFace([1, 2, 3]), TriangleFace([1, 3, 4]),
+        TriangleFace([2, 3, 7]), TriangleFace([2, 7, 6]),
+        TriangleFace([7, 8, 5]), TriangleFace([7, 5, 6]),
+        TriangleFace([1, 4, 8]), TriangleFace([1, 8, 5]),
+        TriangleFace([4, 3, 7]), TriangleFace([4, 7, 8]),
+        TriangleFace([1, 2, 6]), TriangleFace([1, 6, 5]),
+    ]
     return GeometryBasics.Mesh(v, f)
 end
 
@@ -292,4 +307,14 @@ function multilines!(ax, x, y, idx=1:lastindex(y[1]); kwargs...)
     for i in idx
         lines!(ax, x, getindex.(y, i); kwargs...)
     end
+end
+
+function mergeMesh(m1, m2)
+    f = faces(m1)
+    v = [m1.position; m2.position]
+    nv = length(m1.position)
+    for f2 in faces(m2)
+        push!(f, TriangleFace([f2[1]+nv, f2[2]+nv, f2[3]+nv]))
+    end
+    return GeometryBasics.Mesh(v, f)
 end
