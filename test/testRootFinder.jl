@@ -6,4 +6,4 @@ x0 = [-1.0; 0.0]
 x1 = rootFinder(f, x0; method=:NewtonRaphson, derivatives=:ForwardDiff)
 x2 = rootFinder(f, x0; method=:NewtonRaphson, derivatives=:FiniteDiff)
 x3 = rootFinder(f, x0; method=:Broyden)
-x4 = rootFinder(f, x0; method=:ModifiedBroyden)
+@time x4 = rootFinder(f, x0; method=:ModifiedBroyden)

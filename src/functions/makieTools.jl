@@ -303,9 +303,13 @@ function lines3!(ax, pos; kwargs...)
     lines!(ax, getindex.(pos, 1), getindex.(pos, 2), getindex.(pos, 3); kwargs...)
 end
 
-function multilines!(ax, x, y, idx=1:lastindex(y[1]); kwargs...)
+function multilines!(ax, x, y, idx=1:lastindex(y[1]); colors=0.0, kwargs...)
     for i in idx
-        lines!(ax, x, getindex.(y, i); kwargs...)
+        if colors == 0.0
+            lines!(ax, x, getindex.(y, i); kwargs...)
+        else
+            lines!(ax, x, getindex.(y, i); color=colors[i], kwargs...)
+        end
     end
 end
 
