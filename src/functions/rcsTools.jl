@@ -98,7 +98,7 @@ function rcsEnvelope(My; N=1000, unconstrained=false, v=sampleEvenlySphere(N; in
         else
             problem = maximize(v[k]'*My[1:3, :]*y, [(I - v[k]*v[k]')*My[1:3, :]*y == zeros(3), My[4:6, :]*y == zeros(3), y ≤ ones(n), y ≥ zeros(n)])
         end
-        Convex.solve!(problem, ECOS.Optimizer(); silent_solver=true)
+        Convex.solve!(problem, () -> ECOS.Optimizer(); silent=true)
         Uforce[k] .*= problem.optval
         Eforce[k] .*= problem.optval/sum(y.value.*forceRCS)
 
@@ -108,7 +108,7 @@ function rcsEnvelope(My; N=1000, unconstrained=false, v=sampleEvenlySphere(N; in
         else
             problem = maximize(v[k]'*My[4:6, :]*y, [(I - v[k]*v[k]')*My[4:6, :]*y == zeros(3), My[1:3, :]*y == zeros(3), y ≤ ones(n), y ≥ zeros(n)])
         end
-        Convex.solve!(problem, ECOS.Optimizer(); silent_solver=true)
+        Convex.solve!(problem, () -> ECOS.Optimizer(); silent=true)
         Utorque[k] .*= problem.optval
         Etorque[k] .*= problem.optval/sum(y.value.*forceRCS)
     end
@@ -132,7 +132,7 @@ function rcsAllocation(u, My, c=ones(size(My, 2)))
     n = size(My, 2)
     y = Variable(n)
     problem = minimize(c'*y, [My*y == u, y ≤ ones(n), y ≥ zeros(n)])
-    Convex.solve!(problem, ECOS.Optimizer(); silent_solver=true)
+    Convex.solve!(problem, () -> ECOS.Optimizer(); silent=true)
     return y.value
 end
 
