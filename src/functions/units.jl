@@ -4,6 +4,7 @@ module Units
     cm = 1e-2
     mm = 1e-3
     km = 1e3
+    inch = 0.0254
 
     # Time
     s = 1.0
