@@ -25,6 +25,9 @@ include("functions/goldenSectionSearch.jl")
 export rootFinder
 include("functions/rootFinder.jl")
 
+export bisection
+include("functions/bisection.jl")
+
 export ode38
 include("functions/ode38.jl")
 
@@ -56,6 +59,9 @@ include("functions/psd.jl")
 
 export rcsMixMatrix, rcsAllocation, rcsAnalysis, rcsEnvelope, plotRcs, plotRcs!, rcsAllocationSimplex
 include("functions/rcsTools.jl")
+
+export mesh2obj
+include("functions/mesh2obj.jl")
 
 export includedir
 include("functions/utils.jl")
