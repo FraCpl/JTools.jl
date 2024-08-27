@@ -162,7 +162,7 @@ end
 #   [2] J. Paradiso, "A Highly Adaptable Steering/Selection Procedure for
 #       Combined CMG/RCS Spacecraft Control".
 #
-#	Authors: F. Capolupo
+#	Author: F. Capolupo
 function rcsAllocationSimplex(u, My, c=ones(size(My, 2)))
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
     # Justification of cost 'z' and matrix 'E'.
@@ -238,7 +238,7 @@ function rcsAllocationSimplex(u, My, c=ones(size(My, 2)))
         jPivot = 0          # Local (i.e., within basis) index of the smallest pivot ratio
         jUpper = 0          # Local (i.e., within basis) index of the smallest upper bound ratio
 
-        for j = 1:m
+        for j in 1:m
             if e[j] > 0
                 # The thruster in the basis will go to zero and leave the basis
                 # (CASE 1)
