@@ -34,6 +34,8 @@ function lsq(f, x0;
         relTolStuck=0.1/100,        # Relative tolerance to declare the algorithm stuck
         verbose=true,               # Show progress
         userJacobian=false,         # input function does provide jacobian, i.e., r, J = f(x)
+        userWeights=false,          # W = fun(x, y)
+        weightsFun=(x, y) -> 1.0,
     )
 
     iStuck = 0
@@ -48,6 +50,9 @@ function lsq(f, x0;
         else
             y = f(x)
             J = ForwardDiff.jacobian(f, x)
+        end
+        if userWeights
+            W = weightsFun(x, y)
         end
 
         # Auxiliary matrices
