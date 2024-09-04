@@ -10,8 +10,8 @@ function ode38(f, x0, tspan; nSteps=100)
     for _ in 1:nSteps
         f(K1, t, x)
         f(K2, t + 1/3*h, x + h*K1/3)
-        f(K3, t + 2/3*h, x - h*K1/3 + h*K2)
-        f(K4, t + h, x + h*K1 - h*K2 + h*K3)
+        f(K3, t + 2/3*h, x + h*(-K1/3 + K2))
+        f(K4, t + h, x + h*(K1 - K2 + K3))
         t += h
         x += h*(K1 + 3K2 + 3K3 + K4)/8
     end

@@ -62,11 +62,11 @@ function readObj(objfile::String; computeNormals=false, computeEdges=false)
 
    # Compute model edges
    e = Vector{Vector{Int}}(undef, 0)
-   if computeEdges; e = compEdges(faces); end
+   if computeEdges; e = compEdges(f); end
 
    # Compute model normals
    n = Vector{Vector{Float64}}(undef, 0)
-   if computeNormals; n = compNormals(faces, vertices); end
+   if computeNormals; n = compNormals(f, v); end
 
     return ObjModel(f, v, e, n)
 end
