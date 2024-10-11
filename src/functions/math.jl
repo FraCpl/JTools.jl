@@ -25,3 +25,19 @@ end
 isMultiple(x, y) = modd(x, y) == 0.0
 
 signum(x) = x ≥ 0.0 ? 1.0 : -1.0
+
+function polyfit(x, y, n)
+    A = ones(length(x), n + 1)
+    for i in 1:n
+        A[:, i+1] = x.^i
+    end
+    return A\y
+end
+
+function polyval(C, x)
+    y = 0.0
+    for i in eachindex(C)
+        y += C[i]*x^(i - 1)
+    end
+    return y
+end

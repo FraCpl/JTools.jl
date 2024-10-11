@@ -39,7 +39,7 @@ export cuboidModel, plotCuboid!, plotCone!, plotCylinder!, nicholsgrid, plotEcdf
 export plotBox, plotBox!, lines3!, multilines!, plotSphere!, plotSensorFov!, mergeMesh
 include("functions/makieTools.jl")
 
-export crossmat, logrange, mag2db, db2mag, unwrap!, modd, isMultiple, signum
+export crossmat, logrange, mag2db, db2mag, unwrap!, modd, isMultiple, signum, polyfit, polyval
 include("functions/math.jl")
 
 export lsq
