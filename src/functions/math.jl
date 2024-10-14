@@ -26,6 +26,8 @@ isMultiple(x, y) = modd(x, y) == 0.0
 
 signum(x) = x ≥ 0.0 ? 1.0 : -1.0
 
+# Returns interpolating coefficients C, so that
+# y ≈ C[1] + C[2]*x + C[3]*x^2 + ...
 function polyfit(x, y, n)
     A = ones(length(x), n + 1)
     for i in 1:n
@@ -34,10 +36,22 @@ function polyfit(x, y, n)
     return A\y
 end
 
+# Evaluate polynomial from coefficients C, so that
+# y = C[1] + C[2]*x + C[3]*x^2 + ...
 function polyval(C, x)
     y = 0.0
     for i in eachindex(C)
         y += C[i]*x^(i - 1)
     end
     return y
+end
+
+function interp1(x, y, xi)
+    if xi ≥ x[end]
+        return y[end]
+    elseif xi < x[1]
+        return y[1]
+    end
+    id0 = sum(xi .≥ x)
+    return y[id0] + (y[id0 + 1] - y[id0])/(x[id0 + 1] - x[id0])*(xi - x[id0])
 end
