@@ -12,6 +12,7 @@ using Random
 using SpecialFunctions
 using FFTW
 using Convex, ECOS
+using Printf
 
 export trapz, cumtrapz
 include("functions/trapz.jl")
