@@ -62,7 +62,7 @@ include("functions/psd.jl")
 export rcsMixMatrix, rcsAllocation, rcsAnalysis, rcsEnvelope, plotRcs, plotRcs!, rcsAllocationSimplex
 include("functions/rcsTools.jl")
 
-export mesh2obj, ObjModel, readObj, writeObj
+export mesh2obj, ObjModel, readObj, writeObj, grid2mesh
 include("functions/obj.jl")
 
 export includedir

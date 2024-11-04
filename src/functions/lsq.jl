@@ -7,7 +7,7 @@ multivariate function f(x) = [f₁(x); f₂(x); ...; fₙ(x)].
 
 minₓ: J = fᵀ(x) W f(x)
 
-NB: usually in estimation problems f(x) = y - h(x), where y are stacked noisy measurements
+NB: usually in estimation problems f(x) = h(x) - y, where y are stacked noisy measurements
 and h(x) is the nonlinear measurement model.
 
 Inputs:

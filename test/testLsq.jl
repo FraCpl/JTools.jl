@@ -1,7 +1,7 @@
 using JTools
 using GLMakie
 
-d = collect(range(0, 6, 300))
+d = collect(range(0, 3, 100))
 xTrue = [1.3; 0.4]
 xEst0 = ones(length(xTrue))
 
