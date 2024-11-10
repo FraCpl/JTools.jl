@@ -2,8 +2,8 @@ function theme_fra(spinevis=true; light=false)
     if light
         bg = :white
         fg = RGBf(2/255,50/255,71/255)
-        gridcol = (:black, 0.15)
-        minorgridcol = (:black, 0.1)
+        gridcol = (:black, 0.25)
+        minorgridcol = (:black, 0.2)
         fga = (RGBf(2/255,50/255,71/255), 0.5)
     else
         bg = RGBf(40/255, 44/255, 52/255)
