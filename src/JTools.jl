@@ -17,7 +17,7 @@ using Printf
 export trapz, cumtrapz
 include("functions/trapz.jl")
 
-export ecdf
+export ecdf, interpfEcdf, interpxEcdf
 include("functions/ecdf.jl")
 
 export goldenSectionSearch

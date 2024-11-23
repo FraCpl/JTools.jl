@@ -110,12 +110,12 @@ end
 # Plot axes of frame F in image (world) frame I
 # CAUTION: This seems to make MAKIE crash
 function plotframe!(ax, pos_I=zeros(3), R_IF=Matrix(1.0I, 3, 3), length=1;
-        colors=[:red, :blue, :green], sub="",
+        colors=[:red, :green, :blue], sub="",
         labels=[rich("x", subscript(sub)), rich("y", subscript(sub)), rich("z", subscript(sub))],
-        labelspace=1.1)
+        labelspace=1.1, kwargs...)
     for i in 1:3
         u = R_IF[:, i]*length
-        lines3!(ax, [pos_I, pos_I + u]; color=colors[i])
+        lines3!(ax, [pos_I, pos_I + u]; color=colors[i], kwargs...)
         text!(ax, pos_I[1] + labelspace*u[1], pos_I[2] + labelspace*u[2], pos_I[3] + labelspace*u[3]; text=labels[i], align=(:center, :center), color=colors[i])
     end
 end
@@ -150,7 +150,7 @@ function plotCuboid!(ax, lx=1.0, ly=1.0, lz=1.0, pos_I=zeros(3), R_IB=I; kwargs.
     mesh!(ax, m; kwargs...)
 end
 
-function cuboidModel(lx, ly, lz; pos_I=zeros(3), R_IB=I)
+function cuboidModel(lx, ly, lz; pos_I=zeros(3), R_IB=I, usequad=false)
     v = [Point3f(pos_I + R_IB*[+lx/2; -ly/2; -lz/2]),
          Point3f(pos_I + R_IB*[+lx/2; +ly/2; -lz/2]),
          Point3f(pos_I + R_IB*[+lx/2; +ly/2; +lz/2]),
@@ -160,22 +160,25 @@ function cuboidModel(lx, ly, lz; pos_I=zeros(3), R_IB=I)
          Point3f(pos_I + R_IB*[-lx/2; +ly/2; +lz/2]),
          Point3f(pos_I + R_IB*[-lx/2; -ly/2; +lz/2]),
     ]
-    #f = [
-    #    QuadFace([1, 2, 3, 4]),
-    #    QuadFace([2, 3, 7, 6]),
-    #    QuadFace([7, 8, 5, 6]),
-    #    QuadFace([1, 4, 8, 5]),
-    #    QuadFace([4, 3, 7, 8]),
-    #    QuadFace([1, 2, 6, 5]),
-    #]
-    f = [
-        TriangleFace([1, 2, 3]), TriangleFace([1, 3, 4]),
-        TriangleFace([2, 3, 7]), TriangleFace([2, 7, 6]),
-        TriangleFace([7, 8, 5]), TriangleFace([7, 5, 6]),
-        TriangleFace([1, 4, 8]), TriangleFace([1, 8, 5]),
-        TriangleFace([4, 3, 7]), TriangleFace([4, 7, 8]),
-        TriangleFace([1, 2, 6]), TriangleFace([1, 6, 5]),
-    ]
+    if usequad
+        f = [
+            QuadFace([1, 2, 3, 4]),
+            QuadFace([2, 3, 7, 6]),
+            QuadFace([7, 8, 5, 6]),
+            QuadFace([1, 4, 8, 5]),
+            QuadFace([4, 3, 7, 8]),
+            QuadFace([1, 2, 6, 5]),
+        ]
+    else
+        f = [
+            TriangleFace([1, 2, 3]), TriangleFace([1, 3, 4]),
+            TriangleFace([2, 3, 7]), TriangleFace([2, 7, 6]),
+            TriangleFace([7, 8, 5]), TriangleFace([7, 5, 6]),
+            TriangleFace([1, 4, 8]), TriangleFace([1, 8, 5]),
+            TriangleFace([4, 3, 7]), TriangleFace([4, 7, 8]),
+            TriangleFace([1, 2, 6]), TriangleFace([1, 6, 5]),
+        ]
+    end
     return GeometryBasics.Mesh(v, f)
 end
 

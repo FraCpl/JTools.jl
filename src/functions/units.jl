@@ -12,6 +12,7 @@ module Units
     ms = 1e-3
     min = 60.0
     hr = 3600.0
+    hrs = 3600.0
     hour = 3600.0
     h = 3600.0
     day = 86400.0
