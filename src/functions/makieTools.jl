@@ -161,6 +161,7 @@ function cuboidModel(lx, ly, lz; pos_I=zeros(3), R_IB=I, usequad=false)
          Point3f(pos_I + R_IB*[-lx/2; -ly/2; +lz/2]),
     ]
     if usequad
+        # use quad faces instead of triangles
         f = [
             QuadFace([1, 2, 3, 4]),
             QuadFace([2, 3, 7, 6]),
