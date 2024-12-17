@@ -5,19 +5,13 @@
 function ecdf(y::Vector)
 
     # Check inputs
-    x = copy(y)
-    filter!(x -> ~(isnan.(x) .| isinf.(x)), x)   # Remove NaN and Inf entries
-
-    if isempty(x)
+    n = length(y)
+    if n < 2 | any(isnan.(y) .| isinf.(y))
         return NaN, NaN
     end
 
-    # Compute Empirical F(x)
-    sort!(x)
-    n = length(x)
-    F = (1:n)./n
-
-    return x, F
+    # Return Empirical F(x)
+    return sort(y), (1:n)./n         # x, F(x)
 end
 
 # Compute F[xi]

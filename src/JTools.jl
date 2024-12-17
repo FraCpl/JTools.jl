@@ -44,7 +44,7 @@ export crossmat, logrange, mag2db, db2mag, unwrap!, modd, isMultiple, signum
 export polyfit, polyval, interp1
 include("functions/math.jl")
 
-export lsq
+export lsq, lsqWeight
 include("functions/lsq.jl")
 
 export ransac
