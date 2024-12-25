@@ -51,14 +51,14 @@ function lsq(
 
     x = copy(x0)
     δx = similar(x)
-    isFun = isfun(r)
+    rfun = isfun(r) ? [r] : r   # make r(x) a vector of functions
     nx = length(x0)
     apply(x, δx) = min.(max.(x + δx, lb), ub)
     iter = 0; Jold = 0.0; iStuck = 0
     while iter < maxIter
 
         # Evaluate residual, jacobian, and additional auxiliary matrices
-        J, HᵀWH, HᵀWy = lsq_getJacobians(r, x, W, userJacobian, isFun, nx)
+        J, HᵀWH, HᵀWy = lsq_getJacobians(rfun, x, W, userJacobian, nx)
 
         # Check convergence criterion
         if J ≤ tolRes
@@ -104,7 +104,7 @@ function lsq(
 
         # Adapt LM parameter
         if λ > 0.0
-            Jtest = lsq_getResiduals(r, apply(x, δx), W, userJacobian, isFun)
+            Jtest = lsq_getResiduals(rfun, apply(x, δx), W, userJacobian)
             if Jtest < J
                 λ /= 10.0
             else
@@ -123,45 +123,27 @@ function lsq(
         println("Max number of iterations reached")
     end
 
-    ~, HᵀWH, ~ = lsq_getJacobians(r, x, W, userJacobian, isFun, nx)
+    ~, HᵀWH, ~ = lsq_getJacobians(rfun, x, W, userJacobian, nx)
     return x, inv(HᵀWH)
 end
 
 isfun(f) = !isempty(methods(f))
 
-function lsq_getResiduals(r, x, W, userJacobian, isFun)
-    if isFun
-        # r(x) is a function
-        res = userJacobian ? r(x)[1] : r(x)
-        Wk = W(res)
-        J = res'*(Wk.*res)
-        return J/2
-    end
-
+function lsq_getResiduals(r, x, W, userJacobian)
     # r(x) is a vector of functions
     J = 0.0
-    for k in eachindex(r)
-        res = userJacobian ? r[k](x)[1] : r[k](x)
+    for rk in r
+        res = userJacobian ? rk(x)[1] : rk(x)
         Wk = W(res)
         J += res'*(Wk.*res)
     end
     return J/2
 end
 
-function lsq_getJacobians(r, x, W, userJacobian, isFun, nx)
-    if isFun
-        # r(x) is a function
-        res, H = userJacobian ? r(x) : r(x), ForwardDiff.jacobian(r, x)
-        Wk = W(res)
-        J = res'*(Wk.*res)
-        HᵀW = H'*diagm(Wk)
-        HᵀWH = HᵀW*H
-        HᵀWy = HᵀW*res
-        return J/2, HᵀWH, HᵀWy
-    end
-
+function lsq_getJacobians(r, x, W, userJacobian, nx)
     # r(x) is a vector of functions
-    J = 0.0; HᵀWH = zeros(nx, nx)
+    J = 0.0
+    HᵀWH = zeros(nx, nx)
     HᵀWy = zeros(nx)
     for rk in r
         res, H = userJacobian ? rk(x) : rk(x), ForwardDiff.jacobian(rk, x)

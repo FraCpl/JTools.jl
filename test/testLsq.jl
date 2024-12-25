@@ -15,9 +15,9 @@ function main()
     y[70] -= 30
 
     f(x) = fun.(t, Ref(x)) - y
-    @time xEst1, ~ = lsq(f, xEst0; W=W)
+    @time xEst1, ~ = lsq(f, xEst0; W=W, verbose=false)
     res = [x -> [fun(t[k], x) - y[k]] for k in eachindex(t)]
-    @time xEst2, ~ = lsq(res, xEst0; W=W)
+    @time xEst2, ~ = lsq(res, xEst0; W=W, verbose=false)
 
     @show xEst1
     @show xEst2
