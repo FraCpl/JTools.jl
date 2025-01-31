@@ -23,6 +23,7 @@ end
 
 # Compute x[Fi]
 function interpfEcdf(x, F, Fi)
+    if Fi ≥ 1.0; return x[end]; end
     id1 = findfirst(F .> Fi)
     F0 = F[id1 - 1]
     F1 = F[id1]
