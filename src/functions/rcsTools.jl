@@ -57,7 +57,7 @@ function sampleEvenlySphere(N=100; includeAxes=true)
     dθ = π/Mθ
     dϕ = a/dθ
 
-    r = []
+    r = Array{Vector{Float64}, 1}()
     for m in 0:Mθ - 1
         θ = π*(m + 0.5)/Mθ
         Mϕ = round(Int, 2π*sin(θ)/dϕ)
