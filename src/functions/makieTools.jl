@@ -307,6 +307,10 @@ function lines3!(ax, pos; kwargs...)
     lines!(ax, getindex.(pos, 1), getindex.(pos, 2), getindex.(pos, 3); kwargs...)
 end
 
+function scatter3!(ax, pos; kwargs...)
+    scatter!(ax, getindex.(pos, 1), getindex.(pos, 2), getindex.(pos, 3); kwargs...)
+end
+
 function multilines!(ax, x, y, idx=1:lastindex(y[1]); colors=0.0, kwargs...)
     for i in idx
         if colors == 0.0
