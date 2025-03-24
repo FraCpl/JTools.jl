@@ -137,19 +137,6 @@ function sampleEvenlySphereFibonacci(N=100; includeAxes=true)
     return r
 end
 
-# Example of plotting envelopes:
-# ---
-# using JTools
-# using GLMakie
-# using Polyhedra
-#
-# [compute envelopes]
-#
-# fig = Figure(); display(fig)
-# ax = Axis3(fig[1, 1], aspect=:data, title="Pure force")
-# scatter3!(ax, Uforce; markersize=5)
-# GLMakie.mesh!(ax, Polyhedra.Mesh(polyhedron(vrep(Uforce))); transparency=true, overdraw=false, color=:cyan, alpha=0.6)
-# ---
 function rcsEnvelope(My; N=1000, unconstrained=false, v=sampleEvenlySphereFibonacci(N; includeAxes=true))
 
     v .= normalize.(v)
@@ -187,6 +174,49 @@ function rcsEnvelope(My; N=1000, unconstrained=false, v=sampleEvenlySphereFibona
     return Uforce, Utorque, Eforce, Etorque
 end
 
+# A bit less robust than using Convex.jl. Needs to set desired u to 1e-11 instead of zero,
+# because the simplex allocation algorithm only works for a meaningful desired output, i.e.,
+# u != 0.
+function rcsEnvelope2(My; N=1000, unconstrained=false, v=sampleEvenlySphereFibonacci(N; includeAxes=true))
+
+    v .= normalize.(v)
+
+    forceRCS = [norm(f[1:3]) for f in eachcol(My)]
+    n = size(My, 2)
+    Uforce = deepcopy(v)
+    Eforce = deepcopy(v)
+    Utorque = deepcopy(v)
+    Etorque = deepcopy(v)
+    y = zeros(n)
+
+    for k in eachindex(v)
+        # Force envelope - Maximize force along given direction v[k]
+        if unconstrained
+            idxOn = findall((v[k]'*My[1:3, :])[:] .> 0)
+            y = zeros(n); y[idxOn] .= 1.0
+        else
+            y = rcsAllocationSimplex(1e-11ones(6), [(I - v[k]*v[k]')*My[1:3, :]; My[4:6, :]], (-v[k]'*My[1:3, :])[:]; maxIter=1000)
+        end
+        # Convex.solve!(problem, () -> ECOS.Optimizer(); silent=true)
+        z = v[k]'*My[1:3, :]*y
+        Uforce[k] .*= z
+        Eforce[k] .*= z/sum(y.*forceRCS)
+
+        # Torque envelope - Maximize torque along given direction v[k]
+        if unconstrained
+            idxOn = findall((v[k]'*My[4:6, :])[:] .> 0)
+            y = zeros(n); y[idxOn] .= 1.0
+        else
+            y = rcsAllocationSimplex(1e-11ones(6), [(I - v[k]*v[k]')*My[4:6, :]; My[1:3, :]], (-v[k]'*My[4:6, :])[:]; maxIter=1000)
+        end
+        z = v[k]'*My[4:6, :]*y
+        Utorque[k] .*= z
+        Etorque[k] .*= z/sum(y.*forceRCS)
+    end
+
+    return Uforce, Utorque, Eforce, Etorque
+end
+
 function plotRcs(posRCS, dirRCS; scale=1.0)
     f = Figure(); display(f)
     ax = LScene(f[1, 1])
@@ -198,7 +228,6 @@ function plotRcs!(ax, posRCS, dirRCS; scale=1.0)
     plotCone!.(ax, posRCS, -dirRCS; height=scale)
 end
 
-
 function rcsAllocation(u, My, c=ones(size(My, 2)))
     n = size(My, 2)
     y = Variable(n)
@@ -208,6 +237,8 @@ function rcsAllocation(u, My, c=ones(size(My, 2)))
     yv[yv .< 1e-8] .= 0.0
     return yv
 end
+
+xsign(u) = u < 0.0 ? -1.0 : 1.0
 
 #rcsAllocationSimplex
 #	This function solves the thrusters selection problem using the
@@ -234,9 +265,10 @@ end
 #       https://paradiso.media.mit.edu/papers/Paradiso_HighlyAdaptableSteering_SelectionProcedureForCombined-CMG_RCS-Spacecraft%20Control-R.pdf
 #
 #	Author: F. Capolupo
+
 function rcsAllocationSimplex(u, My, c=ones(size(My, 2)); maxIter=30)
-    xsign(u) = u < 0.0 ? -1.0 : 1.0
     m, n = size(My)           # m = number of dof, n = number of thrusters
+    if all(u .== 0.0); return zeros(n); end
 
     # # Variable change to have ylb = 0
     # off = false;
@@ -255,7 +287,7 @@ function rcsAllocationSimplex(u, My, c=ones(size(My, 2)); maxIter=30)
     iBase = Integer.(n+1:n+m)                   # [m x 1] Global indices (i.e., within the vector Y) of thrusters in the basis. Initial solution is y = s
     Yn = zeros(n + m)                           # [n+m x 1] Thrusters out of the basis, either at zero (Yn[i] = 0) or at max (Yn[i] = Ymax[i])
     yb = abs.(u)                                # [m x 1] Basis vector (i.e., y of the m thrusters that form the basis)
-    Ymax = [ones(n); 10*maximum(yb)*ones(m)]    # [n+m x 1] Parameters upper bounds, 0 <= Y <= Ymax, where Y = [y; s]
+    Ymax = [ones(n); 1000*ones(m)]              # [n+m x 1] Parameters upper bounds, 0 <= Y <= Ymax, where Y = [y; s]
 
     # Loop until all gradient components are positive
     for _ in 1:maxIter
@@ -363,7 +395,6 @@ function rcsAllocationSimplex(u, My, c=ones(size(My, 2)); maxIter=30)
 
     # Build the final solution Y. Y includes the 'm' base variables, plus any
     # other non-base variable at its upper bound.
-    # @show Yn, iBase
     Yn[iBase] .= yb     # Merge non-base and base variables
     y = Yn[1:n]         # Remove slack variables from solution
 
