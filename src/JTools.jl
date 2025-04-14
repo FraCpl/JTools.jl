@@ -36,11 +36,11 @@ export dm2dv, dm2dt, dv2dm, dv2dt
 include("functions/rocketEqs.jl")
 
 export theme_fra, plotMoon!, plotEarth!, axisoff!, plotframe!, transformModel, sensorFovModel
-export cuboidModel, plotCuboid!, plotCone!, plotCylinder!, nicholsgrid, plotEcdf, plotEcdf!
+export cuboidModel, plotCuboid!, plotCone!, plotCylinder!, plotEcdf, plotEcdf!
 export plotBox, plotBox!, lines3!, scatter3!, multilines!, plotSphere!, plotSensorFov!, mergeMesh
 include("functions/makieTools.jl")
 
-export crossmat, logrange, mag2db, db2mag, unwrap!, modd, isMultiple, signum
+export crossmat, logrange, unwrap!, modd, isMultiple, signum
 export polyfit, polyval, interp1
 include("functions/math.jl")
 

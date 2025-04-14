@@ -124,7 +124,8 @@ function lsq(
     end
 
     ~, HᵀWH, ~ = lsq_getJacobians(rfun, x, W, userJacobian, nx)
-    return x, inv(HᵀWH)
+    res = [(userJacobian ? rk(x)[1] : rk(x)) for rk in rfun]       # Get residuals [overhead: this is already computed in lsq_getJacobians]
+    return x, (inv(HᵀWH), res)
 end
 
 isfun(f) = !isempty(methods(f))
