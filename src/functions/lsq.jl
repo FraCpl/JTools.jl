@@ -147,7 +147,13 @@ function lsq_getJacobians(r, x, W, userJacobian, nx)
     HᵀWH = zeros(nx, nx)
     HᵀWy = zeros(nx)
     for rk in r
-        res, H = userJacobian ? rk(x) : rk(x), ForwardDiff.jacobian(rk, x)
+        if userJacobian
+            res, H = rk(x)
+        else
+            res = rk(x)
+            H = ForwardDiff.jacobian(rk, x)
+        end
+        # res, H = userJacobian ? rk(x) : rk(x), ForwardDiff.jacobian(rk, x)
         Wk = W(res)
         J += res'*(Wk.*res)
         HᵀW = H'*diagm(Wk)

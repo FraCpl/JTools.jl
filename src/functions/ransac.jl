@@ -38,7 +38,7 @@ function ransac(funDist,        # Fit + distance function
         dist .= abs.(funDist(iFit))     # added abs just in case (dumb user)
 
         # Identify inliers
-        C = sum(min.(dist, threshold))  # MSAC
+        C = sum(min.(dist, threshold))
 
         # Update best fit if needed
         if C < Cbest
