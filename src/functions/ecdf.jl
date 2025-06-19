@@ -25,7 +25,7 @@ end
 function interpfEcdf(x, F, Fi)
     if Fi ≥ 1.0; return x[end]; end
     id1 = findfirst(F .> Fi)
-    if id1 == 1; return 0.0; end        # TODO: CHECK!
+    if id1 == 1; return NaN; end        # TODO: CHECK!
     F0 = F[id1 - 1]
     F1 = F[id1]
     x0 = x[id1 - 1]
