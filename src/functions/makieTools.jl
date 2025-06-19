@@ -94,7 +94,7 @@ function plotPlanet!(ax, texture, radius=1.0, pos_I=zeros(3), R_IP=I; n=256, kwa
         color=load(texture), shading=NoShading, kwargs...)
 end
 
-function plotSphere!(ax, radius=1.0, pos_I=zeros(3), n=256, kwargs...)
+function plotSphere!(ax, radius=1.0, pos_I=zeros(3), n=256; kwargs...)
     θ = LinRange(0, π, n)       # Colatitude
     φ = LinRange(-π, π, 2n)     # Longitude
     posBody_I = [radius*[cos(φ)*sin(θ); sin(φ)*sin(θ); cos(θ)] + pos_I  for θ in θ, φ in φ]
