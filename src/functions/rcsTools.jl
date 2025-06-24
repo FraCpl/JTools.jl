@@ -288,9 +288,10 @@ function rcsAllocationSimplex(u, My, c=ones(size(My, 2)); maxIter=30)
     Yn = zeros(n + m)                           # [n+m x 1] Thrusters out of the basis, either at zero (Yn[i] = 0) or at max (Yn[i] = Ymax[i])
     yb = abs.(u)                                # [m x 1] Basis vector (i.e., y of the m thrusters that form the basis)
     Ymax = [ones(n); 1000*ones(m)]              # [n+m x 1] Parameters upper bounds, 0 <= Y <= Ymax, where Y = [y; s]
+    eNew = zeros(n)
 
     # Loop until all gradient components are positive
-    for _ in 1:maxIter
+    @inbounds for _ in 1:maxIter
 
         # Find the non-basis thruster that is candidate to enter the basis
         # The thrusters which maximize '∇z' is invited in the basis
@@ -305,7 +306,7 @@ function rcsAllocationSimplex(u, My, c=ones(size(My, 2)); maxIter=30)
         r = Inf             # Smallest base variable variation ratio before reaching bounds
         jOut = 0            # Local (i.e., within basis) index of the first base variable to reach bounds
 
-        for j in 1:m
+        @inbounds for j in 1:m
             rj = r
             if e[j] < 0     # A change in the non-base thrust will cause the base thrust to reduce its thrust level
                 # CASE 2a: The thruster in the basis will reduce its value and go to zero,
@@ -386,9 +387,15 @@ function rcsAllocationSimplex(u, My, c=ones(size(My, 2)); maxIter=30)
 
             # Transform the linear combination coefficients and evaluators.
             # This corresponds to Eq. (11) of [1].
-            eNew = -E[jOut, :]/e[jOut]
+            eNew .= -E[jOut, :]/e[jOut]
             ∇z .+= ∇zMin*eNew
-            E .+= e*eNew'
+            # E .+= e*eNew'
+            @inbounds for i in eachindex(e)
+                ei = e[i]
+                for j in eachindex(eNew)
+                    E[i, j] += ei * eNew[j]
+                end
+            end
             E[jOut, :] = eNew
         end
     end
