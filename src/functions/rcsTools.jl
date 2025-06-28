@@ -388,9 +388,13 @@ function rcsAllocationSimplex(u, My, c=ones(size(My, 2)); maxIter=30)
             # Transform the linear combination coefficients and evaluators.
             # This corresponds to Eq. (11) of [1].
             # eNew .= -E[jOut, :]/e[jOut]
-            eNew .= E[jOut, :]
-            eNew .*= -1/e[jOut]
-            ∇z .+= ∇zMin*eNew
+            # eNew .= E[jOut, :]
+            # eNew .*= -1/e[jOut]
+            # ∇z .+= ∇zMin*eNew
+            @inbounds for j in eachindex(eNew)
+                eNew[j] = -E[jOut, j]/e[jOut]
+                ∇z[j] += ∇zMin*eNew[j]
+            end
             # E .+= e*eNew'
             @inbounds for i in eachindex(e)
                 ei = e[i]
