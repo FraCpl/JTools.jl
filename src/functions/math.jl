@@ -13,7 +13,9 @@ end
 # modup=false (default): modd(x, x) = 0
 # modup=true: modd(x, x) = x
 @inline function modd(x, y; modup=false)
-    if isapprox(rem(x, y, RoundNearest), 0.0; atol=1.49e-8)     # 1.49e-8 = sqrt(eps())
+    r = rem(x, y, RoundNearest)
+    # if isapprox(rem(x, y, RoundNearest), 0.0; atol=1.49e-8)     # 1.49e-8 = sqrt(eps())
+    if abs(r) < 1.49e-8
         return modup ? y : 0.0
     end
     return mod(x, y)
