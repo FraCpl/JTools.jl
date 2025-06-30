@@ -282,12 +282,12 @@ function rcsAllocationSimplex(u, My, c=ones(size(My, 2)); maxIter=30)
     cs = 1e3*maximum(c)*ones(m)                 # [m x 1] Slack variables cost vector
 
     # Setup the initial solution
-    E = -diagm(xsign.(u))*My 	                # [m x n]
-    ∇z = c + E'*cs                              # [n x 1] Cost change when bringing in the base a thruster which is out of the basis (i.e., increasing Yn[i])
-    iBase = Integer.(n+1:n+m)                   # [m x 1] Global indices (i.e., within the vector Y) of thrusters in the basis. Initial solution is y = s
-    Yn = zeros(n + m)                           # [n+m x 1] Thrusters out of the basis, either at zero (Yn[i] = 0) or at max (Yn[i] = Ymax[i])
-    yb = abs.(u)                                # [m x 1] Basis vector (i.e., y of the m thrusters that form the basis)
-    Ymax = [ones(n); 1000*ones(m)]              # [n+m x 1] Parameters upper bounds, 0 <= Y <= Ymax, where Y = [y; s]
+    E = -diagm(xsign.(u))*My 	                            # [m x n]
+    ∇z = c + E'*cs                                          # [n x 1] Cost change when bringing in the base a thruster which is out of the basis (i.e., increasing Yn[i])
+    iBase = Integer.(n+1:n+m)                               # [m x 1] Global indices (i.e., within the vector Y) of thrusters in the basis. Initial solution is y = s
+    Yn = zeros(n + m)                                       # [n+m x 1] Thrusters out of the basis, either at zero (Yn[i] = 0) or at max (Yn[i] = Ymax[i])
+    yb = abs.(u)                                            # [m x 1] Basis vector (i.e., y of the m thrusters that form the basis)
+    Ymax = [ones(n); (maximum(yb) + 1.0)*ones(m)]           # [n+m x 1] Parameters upper bounds, 0 <= Y <= Ymax, where Y = [y; s]
     eNew = zeros(n)
 
     # Loop until all gradient components are positive
