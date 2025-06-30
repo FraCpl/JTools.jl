@@ -266,7 +266,7 @@ xsign(u) = u < 0.0 ? -1.0 : 1.0
 #
 #	Author: F. Capolupo
 
-@views function rcsAllocationSimplex(u, My, c=ones(size(My, 2)); maxIter=30)
+function rcsAllocationSimplex(u, My, c=ones(size(My, 2)); maxIter=30)
     m, n = size(My)           # m = number of dof, n = number of thrusters
     if all(u .== 0.0); return zeros(n); end
 
