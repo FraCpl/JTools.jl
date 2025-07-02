@@ -13,6 +13,7 @@ using SpecialFunctions
 using FFTW
 using Convex, ECOS
 using Printf
+using Statistics
 
 export trapz, cumtrapz
 include("functions/trapz.jl")
@@ -38,6 +39,7 @@ include("functions/rocketEqs.jl")
 export theme_fra, plotMoon!, plotEarth!, axisoff!, plotframe!, transformModel, sensorFovModel
 export cuboidModel, plotCuboid!, plotCone!, plotCylinder!, plotEcdf, plotEcdf!
 export plotBox, plotBox!, lines3!, scatter3!, multilines!, plotSphere!, plotSensorFov!, mergeMesh
+export plotCorrelation, plotCorrelation!
 include("functions/makieTools.jl")
 
 export crossmat, logrange, unwrap!, modd, isMultiple, signum

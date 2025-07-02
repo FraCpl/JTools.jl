@@ -301,3 +301,45 @@ function mergeMesh(m1, m2)
     end
     return GeometryBasics.Mesh(v, f)
 end
+
+# Example input data:
+# data = (A = randn(n), B = randn(n), C = randn(n), D = randn(n))
+# TODO: Synchronize zoom among subplots
+function plotCorrelation(data, kwargs...)
+    fig = Figure(size=(800, 800)); display(fig)
+    plotCorrelation!(fig, data, kwargs...)
+    return fig
+end
+
+function plotCorrelation!(fig, data, kwargs...)
+
+    varnames = keys(data)
+    nvars = length(varnames)
+
+    # Loop over variable pairs to plot
+    for i in 1:nvars, j in 1:nvars
+        if i > j
+            if j == 1
+                if i == nvars
+                    ax = Axis(fig[i-1, j]; ylabel="$(varnames[i])", xlabel="$(varnames[j])")
+                else
+                    ax = Axis(fig[i-1, j]; ylabel="$(varnames[i])", xticksvisible=false, xticklabelsvisible=false)#
+                end
+            elseif i == nvars
+                ax = Axis(fig[i-1, j]; xlabel="$(varnames[j])", yticksvisible=false, yticklabelsvisible=false)#
+            else
+                ax = Axis(fig[i-1, j]; xticksvisible=false, xticklabelsvisible=false, yticksvisible=false, yticklabelsvisible=false)
+            end
+
+            xi = data[varnames[j]]
+            yi = data[varnames[i]]
+
+            r = round(cor(xi, yi), digits=2)
+            scatter!(ax, xi, yi; kwargs...)
+            scatter!(ax, 0.0, 0.0; color=(:white, 0.0), label="r = $r")
+            axislegend(ax, framevisible=false)
+        end
+    end
+
+    return
+end
