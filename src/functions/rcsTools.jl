@@ -265,8 +265,8 @@ xsign(u) = u < 0.0 ? -1.0 : 1.0
 #       https://paradiso.media.mit.edu/papers/Paradiso_HighlyAdaptableSteering_SelectionProcedureForCombined-CMG_RCS-Spacecraft%20Control-R.pdf
 #
 #	Author: F. Capolupo
-
-function rcsAllocationSimplex(u, My, c=ones(size(My, 2)); maxIter=30)
+# function rcsAllocationSimplex(u, My, c=ones(size(My, 2)); maxIter=30)
+function rcsAllocationSimplex(u, My; maxIter=30)
     m, n = size(My)           # m = number of dof, n = number of thrusters
     if all(u .== 0.0); return zeros(n); end
 
@@ -279,11 +279,14 @@ function rcsAllocationSimplex(u, My, c=ones(size(My, 2)); maxIter=30)
     # end
 
     # maxIter = 30#3m + 1                 # was 3m + 10, but needed to heuristically increase a bit
-    cs = 1e3*maximum(c)*ones(m)                 # [m x 1] Slack variables cost vector
+    # cs = 1e3*maximum(c)*ones(m)                 # [OLD with c] [m x 1] Slack variables cost vector
+    cs = 1e3*ones(m)                            # [m x 1] Slack variables cost vector
 
     # Setup the initial solution
     E = -diagm(xsign.(u))*My 	                            # [m x n]
-    ∇z = c + E'*cs                                          # [n x 1] Cost change when bringing in the base a thruster which is out of the basis (i.e., increasing Yn[i])
+    # ∇z = c + E'*cs                                          # [OLD with c] [n x 1] Cost change when bringing in the base a thruster which is out of the basis (i.e., increasing Yn[i])
+    ∇z = 1.0 .+ E'*cs                                       # [n x 1] Cost change when bringing in the base a thruster which is out of the basis (i.e., increasing Yn[i])
+
     iBase = Integer.(n+1:n+m)                               # [m x 1] Global indices (i.e., within the vector Y) of thrusters in the basis. Initial solution is y = s
     Yn = zeros(n + m)                                       # [n+m x 1] Thrusters out of the basis, either at zero (Yn[i] = 0) or at max (Yn[i] = Ymax[i])
     yb = abs.(u)                                            # [m x 1] Basis vector (i.e., y of the m thrusters that form the basis)
