@@ -268,7 +268,7 @@ xsign(u) = u < 0.0 ? -1.0 : 1.0
 # function rcsAllocationSimplex(u, My, c=ones(size(My, 2)); maxIter=30)
 function rcsAllocationSimplex(u, My; maxIter=30)
     m, n = size(My)           # m = number of dof, n = number of thrusters
-    if all(u .== 0.0); return zeros(n); end
+    if iszero(u); return zeros(n); end
 
     # # Variable change to have ylb = 0
     # off = false;
@@ -286,6 +286,7 @@ function rcsAllocationSimplex(u, My; maxIter=30)
     E = -diagm(xsign.(u))*My 	                            # [m x n]
     # ∇z = c + E'*cs                                          # [OLD with c] [n x 1] Cost change when bringing in the base a thruster which is out of the basis (i.e., increasing Yn[i])
     ∇z = 1.0 .+ E'*cs                                       # [n x 1] Cost change when bringing in the base a thruster which is out of the basis (i.e., increasing Yn[i])
+    e = zeros(m)
 
     iBase = Integer.(n+1:n+m)                               # [m x 1] Global indices (i.e., within the vector Y) of thrusters in the basis. Initial solution is y = s
     Yn = zeros(n + m)                                       # [n+m x 1] Thrusters out of the basis, either at zero (Yn[i] = 0) or at max (Yn[i] = Ymax[i])
@@ -305,9 +306,11 @@ function rcsAllocationSimplex(u, My; maxIter=30)
         # Determine the candidate base thrusters to leave the basis
         # This corresponds to the basis thruster that first reaches 0 or its upper bound when
         # we vary the candidate non-base thruster. (smallest shut-off and smallest upper bnd index)
-        e = E[:, iIn]       # Local vector indicating the rate of change of the base thrusters due to the value of the invited thruster
-        r = Inf             # Smallest base variable variation ratio before reaching bounds
-        jOut = 0            # Local (i.e., within basis) index of the first base variable to reach bounds
+        @inbounds for j in eachindex(e)
+            e[j] = E[j, iIn]    # Local vector indicating the rate of change of the base thrusters due to the value of the invited thruster
+        end
+        r = Inf                 # Smallest base variable variation ratio before reaching bounds
+        jOut = 0                # Local (i.e., within basis) index of the first base variable to reach bounds
 
         @inbounds for j in 1:m
             rj = r
