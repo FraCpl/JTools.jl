@@ -306,13 +306,11 @@ function rcsAllocationSimplex(u, My; maxIter=30)
         # Determine the candidate base thrusters to leave the basis
         # This corresponds to the basis thruster that first reaches 0 or its upper bound when
         # we vary the candidate non-base thruster. (smallest shut-off and smallest upper bnd index)
-        @inbounds for j in eachindex(e)
-            e[j] = E[j, iIn]    # Local vector indicating the rate of change of the base thrusters due to the value of the invited thruster
-        end
         r = Inf                 # Smallest base variable variation ratio before reaching bounds
         jOut = 0                # Local (i.e., within basis) index of the first base variable to reach bounds
 
         @inbounds for j in 1:m
+            e[j] = E[j, iIn]    # Local vector indicating the rate of change of the base thrusters due to the value of the invited thruster
             rj = r
             if e[j] < 0     # A change in the non-base thrust will cause the base thrust to reduce its thrust level
                 # CASE 2a: The thruster in the basis will reduce its value and go to zero,
@@ -340,12 +338,15 @@ function rcsAllocationSimplex(u, My; maxIter=30)
             # non-base variable does. The non-base variable stays out of the basis but it
             # goes either to 0 or to its upper bound. The basis is not modified.
             Yn[iIn] = Ymax[iIn] - Yn[iIn]       # Update the non-basis vector list. With this operation, if Yn is 0 then it goes to Ymax, if Yn = Ymax then it goes to 0
-            yb .+= Ymax[iIn]*e                  # Update the on times for the jets in the basis (substract the effects of having an out of basis thruster at its upper bound)
 
-            # Switching polarity to indicate that now thruster ratio y must be decreased (or
-            # increased) rather than increased (or decreased) when trying to decrease cost
-            # in next iterations
-            E[:, iIn] = -E[:, iIn]
+            @inbounds for k in 1:m
+                yb[k] += Ymax[iIn]*e[k]         # Update the on times for the jets in the basis (substract the effects of having an out of basis thruster at its upper bound)
+
+                # Switching polarity to indicate that now thruster ratio y must be decreased (or
+                # increased) rather than increased (or decreased) when trying to decrease cost
+                # in next iterations
+                E[k, iIn] = -E[k, iIn]
+            end
             ∇z[iIn] = -∇z[iIn]
 
         else
@@ -363,7 +364,9 @@ function rcsAllocationSimplex(u, My; maxIter=30)
                 # from its upper bound rather than increased from zero (only done for real
                 # thrusters, and not slack variables)
                 if iOut ≤ n
-                    E[:, iOut] = -E[:, iOut]
+                    @inbounds for k in 1:m
+                        E[k, iOut] = -E[k, iOut]
+                    end
                     ∇z[iOut] = -∇z[iOut]
                 end
             else
@@ -373,7 +376,9 @@ function rcsAllocationSimplex(u, My; maxIter=30)
 
             # Update basis
             iBase[jOut] = iIn               # Update list of thrusters in basis (replace basis variables with candidate non-basis one)
-            yb .+= r*e                      # Update the solution (substract the effects of having removed one thruster from basis)
+            @inbounds for k in 1:m
+                yb[k] += r*e[k]             # Update the solution (substract the effects of having removed one thruster from basis)
+            end
 
             # Check to see if incoming var is decreasing from upper bnd
             if Yn[iIn] > 0.0                # If the candidate non-base thruster was open before entering the base
@@ -383,9 +388,12 @@ function rcsAllocationSimplex(u, My; maxIter=30)
                 # Switching polarity back to 'nominal' to indicate that now
                 # thruster ratio y must be increased rather than decreased from
                 # its upper bound
-                E[:, iIn] = -E[:, iIn]
+                # E[:, iIn] = -E[:, iIn]
+                @inbounds for k in 1:m
+                    E[k, iIn] = -E[k, iIn]
+                end
                 ∇z[iIn] = -∇z[iIn]
-                e = -e
+                e .*= -1
                 ∇zMin = -∇zMin
             else
                 yb[jOut] = r
