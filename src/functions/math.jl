@@ -52,6 +52,7 @@ end
     elseif xi < x[1]
         return y[1]
     end
-    id0 = sum(xi .≥ x)
+    # id0 = sum(xi .≥ x)
+    id0 = searchsortedlast(x, xi)
     return y[id0] + (y[id0 + 1] - y[id0])/(x[id0 + 1] - x[id0])*(xi - x[id0])
 end
