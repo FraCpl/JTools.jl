@@ -267,6 +267,12 @@ xsign(u) = u < 0.0 ? -1.0 : 1.0
 #	Author: F. Capolupo
 # function rcsAllocationSimplex(u, My, c=ones(size(My, 2)); maxIter=30)
 function rcsAllocationSimplex(u, My; maxIter=30)
+    y = Vector{eltype(u)}(undef, size(My, 2))
+    rcsAllocationSimplex!(y, u, My; maxIter=maxIter)
+    return y
+end
+
+function rcsAllocationSimplex!(y, u, My; maxIter=30)
     m, n = size(My)           # m = number of dof, n = number of thrusters
     if iszero(u); return zeros(n); end
 
@@ -421,7 +427,9 @@ function rcsAllocationSimplex(u, My; maxIter=30)
     # Build the final solution Y. Y includes the 'm' base variables, plus any
     # other non-base variable at its upper bound.
     Yn[iBase] .= yb     # Merge non-base and base variables
-    y = Yn[1:n]         # Remove slack variables from solution
+    @inbounds for i in 1:n
+        y[i] = Yn[i]         # Remove slack variables from solution
+    end
 
     # # Restore ylb offset
     # if off, y = y + ylb; end
@@ -429,5 +437,5 @@ function rcsAllocationSimplex(u, My; maxIter=30)
     # Generate success flag - All slack variables must be zero
     # @show flag = norm(Yn[n+1:end]) < 1e-7;
 
-    return y
+    return
 end
