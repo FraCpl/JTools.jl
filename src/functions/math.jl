@@ -54,5 +54,6 @@ end
     end
     # id0 = sum(xi .≥ x)
     id0 = searchsortedlast(x, xi)
-    return y[id0] + (y[id0 + 1] - y[id0])/(x[id0 + 1] - x[id0])*(xi - x[id0])
+    dx = (xi - x[id0])/(x[id0 + 1] - x[id0])
+    return (1 - dx).*y[id0] + dx.*y[id0 + 1]
 end
