@@ -274,7 +274,7 @@ end
 
 function rcsAllocationSimplex!(y, u, My; maxIter=30)
     m, n = size(My)           # m = number of dof, n = number of thrusters
-    if iszero(u); return zeros(n); end
+    if iszero(u); y .= 0.0; return; end
 
     # # Variable change to have ylb = 0
     # off = false;
