@@ -297,7 +297,7 @@ function rcsAllocationSimplex!(y, u, My; maxIter=30)
     iBase = Integer.(n+1:n+m)                               # [m x 1] Global indices (i.e., within the vector Y) of thrusters in the basis. Initial solution is y = s
     Yn = zeros(n + m)                                       # [n+m x 1] Thrusters out of the basis, either at zero (Yn[i] = 0) or at max (Yn[i] = Ymax[i])
     yb = abs.(u)                                            # [m x 1] Basis vector (i.e., y of the m thrusters that form the basis)
-    Ymax = [ones(n); (maximum(yb) + 1.0)*ones(m)]           # [n+m x 1] Parameters upper bounds, 0 <= Y <= Ymax, where Y = [y; s]
+    Ymax = [ones(n); 1e3*maximum(yb)*ones(m)]           # [n+m x 1] Parameters upper bounds, 0 <= Y <= Ymax, where Y = [y; s] TODO: Caution, this was creating problems when it was (maximum(yb) + 1.0)
     eNew = zeros(n)
 
     # Loop until all gradient components are positive
