@@ -289,7 +289,7 @@ function rcsAllocationSimplex!(y, u, My; maxIter=30)
     cs = 1e3*ones(m)                        # [m x 1] Slack variables cost vector
 
     # Setup the initial solution
-    E = -diagm(xsign.(u))*My 	            # [m x n]
+    E = -xsign.(u).*My 	                    # [m x n]
     # ∇z = c + E'*cs                        # [OLD with c] [n x 1] Cost change when bringing in the base a thruster which is out of the basis (i.e., increasing Yn[i])
     ∇z = 1.0 .+ E'*cs                       # [n x 1] Cost change when bringing in the base a thruster which is out of the basis (i.e., increasing Yn[i])
     e = zeros(m)
