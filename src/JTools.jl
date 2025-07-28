@@ -43,7 +43,7 @@ export plotCorrelation, plotCorrelation!
 include("functions/makieTools.jl")
 
 export crossmat, logrange, unwrap!, modd, isMultiple, signum
-export polyfit, polyval, interp1
+export polyfit, polyval, interp1, mul3x1!, mul3x3!
 include("functions/math.jl")
 
 export lsq, lsqWeight

@@ -56,3 +56,18 @@ end
     id0 = searchsortedlast(x, xi)
     return y[id0] + (y[id0 + 1] - y[id0])/(x[id0 + 1] - x[id0])*(xi - x[id0])
 end
+
+
+@inline function mul3x1!(out, A, b)
+    @inbounds @simd for i in 1:3
+        out[i] = A[i, 1]*b[1] + A[i, 2]*b[2] + A[i, 3]*b[3]
+    end
+    return
+end
+
+@inline function mul3x3!(out, A, B)
+    @inbounds for i in 1:3, j in 1:3
+        out[i, j] = A[i, 1]*B[1, j] + A[i, 2]*B[2, j] + A[i, 3]*B[3, j]
+    end
+    return
+end
