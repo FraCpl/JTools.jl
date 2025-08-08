@@ -1,5 +1,6 @@
 using LinearAlgebra
 using JTools
+using BenchmarkTools
 
 function Conf1()
     rCoM = [0.011492287518140363, 0.013142790801125676, 1.4899054489372667]
@@ -188,6 +189,7 @@ function testsplx(data)
     # Random.seed!(13085610)
     N = size(My, 2)
     maxErr = -1.0
+    r = RcsAllocator(My)
     uerr = []; yerr = []
     for i in 1:100000
         y = rand(N)
@@ -195,7 +197,8 @@ function testsplx(data)
         # y[9] = 1.0
         # y[20] = 1.0
         u = My * y
-        yr = rcsAllocationSimplex(u, My)
+        rcsAllocationSimplex!(r, u)
+        yr = r.y
         if minimum(yr) < 0.0 || maximum(yr) > 1.0
             @show "err"
         end
@@ -212,6 +215,18 @@ function testsplx(data)
     return maxErr
 end
 
+function testsplxAlloc(data)
+    posOR_B, dirR_B, rCoM = data
+    My = rcsMixMatrix(posOR_B, dirR_B, [], rCoM)
+    N = size(My, 2)
+    r = RcsAllocator(My)
+    y = rand(N)
+    u = My * y
+    @btime rcsAllocationSimplex!($r, $u)
+    return
+end
+
 @show testsplx(Conf1())
 @show testsplx(Conf2())
 @show testsplx(Conf3())
+testsplxAlloc(Conf1())

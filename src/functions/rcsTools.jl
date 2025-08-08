@@ -238,7 +238,7 @@ function rcsAllocation(u, My, c=ones(size(My, 2)))
     return yv
 end
 
-xsign(u) = u < 0.0 ? -1.0 : 1.0
+# xsign(u) = u < 0.0 ? -1.0 : 1.0
 
 #rcsAllocationSimplex
 #	This function solves the thrusters selection problem using the
@@ -266,15 +266,57 @@ xsign(u) = u < 0.0 ? -1.0 : 1.0
 #
 #	Author: F. Capolupo
 # function rcsAllocationSimplex(u, My, c=ones(size(My, 2)); maxIter=30)
-function rcsAllocationSimplex(u, My; maxIter=30)
-    y = Vector{eltype(u)}(undef, size(My, 2))
-    rcsAllocationSimplex!(y, u, My; maxIter=maxIter)
-    return y
+mutable struct RcsAllocator{T}
+    m::Int     # Number of dof
+    n::Int     # Number of RCS
+    My::Matrix{T}
+    y::Vector{T}
+    c::Vector{T}
+    maxIter::Int
+
+    # Allocations
+    E::Matrix{T}
+    ∇z::Vector{T}
+    e::Vector{T}
+    iBase::Vector{Int}
+    Yn::Vector{T}
+    yb::Vector{T}
+    Ymax::Vector{T}
+    eNew::Vector{T}
+    cs::Vector{T}
 end
 
-function rcsAllocationSimplex!(y, u, My; maxIter=30)
-    m, n = size(My)           # m = number of dof, n = number of thrusters
-    if iszero(u); y .= 0.0; return; end
+function RcsAllocator(My, c=ones(size(My, 2)); maxIter=30, yMaxSlack=1e8, cSlack=1e3*maximum(c))
+    m, n = size(My)
+    Ymax = [ones(n); yMaxSlack*ones(m)]
+    return RcsAllocator(m, n, My, zeros(n), c, maxIter, zeros(m, n), zeros(n), zeros(m), ones(Int, m), zeros(n + m), zeros(m), Ymax, zeros(n), cSlack*ones(m))
+end
+
+function rcsAllocationSimplex(u, My, c=ones(size(My, 2)); maxIter=30)
+    r = RcsAllocator(My, c; maxIter=maxIter)
+    rcsAllocationSimplex!(r, u)
+    return r.y
+end
+
+function rcsAllocationSimplex!(r::RcsAllocator, u)
+    r.y .= 0.0
+    if iszero(u); return; end
+
+    # Aliases
+    m = r.m             # Number of dof (output size)
+    n = r.n             # Number of thrusters
+    My = r.My           # Dimensional mixing matrix
+    c = r.c             # [n x 1] Cost coefficients vector
+    E = r.E
+    ∇z = r.∇z           # [n x 1] Cost change when bringing in the base a thruster which is out of the basis (i.e., increasing Yn[i])
+    e = r.e
+    iBase = r.iBase     # [m x 1] Global indices (i.e., within the vector Y) of thrusters in the basis. Initial solution is y = s
+    Yn = r.Yn           # [n+m x 1] Thrusters out of the basis, either at zero (Yn[i] = 0) or at max (Yn[i] = Ymax[i])
+    yb = r.yb           # [m x 1] Basis vector (i.e., y of the m thrusters that form the basis)
+    Ymax = r.Ymax       # [n+m x 1] Parameters upper bounds, 0 <= Y <= Ymax, where Y = [y; s] TODO: Caution, this was creating problems when it was (maximum(yb) + 1.0)
+    eNew = r.eNew
+    cs = r.cs           # [m x 1] Slack variables cost vector
+    y = r.y
 
     # # Variable change to have ylb = 0
     # off = false;
@@ -284,24 +326,26 @@ function rcsAllocationSimplex!(y, u, My; maxIter=30)
     #     off = true;
     # end
 
-    # maxIter = 30#3m + 1                 # was 3m + 10, but needed to heuristically increase a bit
-    # cs = 1e3*maximum(c)*ones(m)           # [OLD with c] [m x 1] Slack variables cost vector
-    cs = 1e3*ones(m)                        # [m x 1] Slack variables cost vector
-
     # Setup the initial solution
-    E = -xsign.(u).*My 	                    # [m x n]
-    # ∇z = c + E'*cs                        # [OLD with c] [n x 1] Cost change when bringing in the base a thruster which is out of the basis (i.e., increasing Yn[i])
-    ∇z = 1.0 .+ E'*cs                       # [n x 1] Cost change when bringing in the base a thruster which is out of the basis (i.e., increasing Yn[i])
-    e = zeros(m)
-
-    iBase = Integer.(n+1:n+m)               # [m x 1] Global indices (i.e., within the vector Y) of thrusters in the basis. Initial solution is y = s
-    Yn = zeros(n + m)                       # [n+m x 1] Thrusters out of the basis, either at zero (Yn[i] = 0) or at max (Yn[i] = Ymax[i])
-    yb = abs.(u)                            # [m x 1] Basis vector (i.e., y of the m thrusters that form the basis)
-    Ymax = [ones(n); 1e8*ones(m)]           # [n+m x 1] Parameters upper bounds, 0 <= Y <= Ymax, where Y = [y; s] TODO: Caution, this was creating problems when it was (maximum(yb) + 1.0)
-    eNew = zeros(n)
+    # E .= -xsign.(u).*My
+    E .= My
+    @inbounds for i in 1:m
+        if u[i] > 0.0
+            @inbounds for j in 1:n
+                E[i, j] *= -1.0
+            end
+        end
+        iBase[i] = n + i
+        yb[i] = abs(u[i])
+    end
+    mul!(∇z, E', cs)
+    ∇z .+= c
+    e .= 0.0
+    eNew .= 0.0
+    Yn .= 0.0
 
     # Loop until all gradient components are positive
-    @inbounds for _ in 1:maxIter
+    @inbounds for _ in 1:r.maxIter
 
         # Find the non-basis thruster that is candidate to enter the basis
         # The thrusters which maximize '∇z' is invited in the basis
