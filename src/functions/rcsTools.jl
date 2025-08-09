@@ -350,7 +350,14 @@ function rcsAllocationSimplex!(r::RcsAllocator, u)
         # Find the non-basis thruster that is candidate to enter the basis
         # The thrusters which maximize '∇z' is invited in the basis
         # (and if ∇zMin > 0, i.e. if there is still room for improvement)
-        ∇zMin, iIn = findmin(first, ∇z)
+        ∇zMin = ∇z[1]; iIn = 1
+        @inbounds for i in 2:n
+            if ∇z[i] < ∇zMin
+                ∇zMin = ∇z[i]
+                iIn = i
+            end
+        end
+        # ∇zMin, iIn = findmin(first, ∇z)
         if ∇zMin ≥ 0.0; break; end  # No further improvement possible
 
         # Determine the candidate base thrusters to leave the basis
@@ -464,7 +471,9 @@ function rcsAllocationSimplex!(r::RcsAllocator, u)
                     E[i, j] += ei * eNew[j]
                 end
             end
-            E[jOut, :] = eNew
+            @inbounds for i in eachindex(eNew)
+                E[jOut, i] = eNew[i]
+            end
         end
     end
 
