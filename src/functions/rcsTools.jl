@@ -266,30 +266,30 @@ end
 #
 #	Author: F. Capolupo
 # function rcsAllocationSimplex(u, My, c=ones(size(My, 2)); maxIter=30)
-mutable struct RcsAllocator{T}
-    m::Int     # Number of dof
-    n::Int     # Number of RCS
-    My::Matrix{T}
-    y::Vector{T}
-    c::Vector{T}
-    maxIter::Int
+mutable struct RcsAllocator
+    m::Int64    # Number of DoF
+    n::Int64    # Number of Thrusters
+    My::Matrix{Float64}
+    y::Vector{Float64}
+    c::Vector{Float64}
+    maxIter::Int64
 
     # Allocations
-    E::Matrix{T}
-    ∇z::Vector{T}
-    e::Vector{T}
-    iBase::Vector{Int}
-    Yn::Vector{T}
-    yb::Vector{T}
-    Ymax::Vector{T}
-    eNew::Vector{T}
-    cs::Vector{T}
+    E::Matrix{Float64}
+    ∇z::Vector{Float64}
+    e::Vector{Float64}
+    iBase::Vector{Int64}
+    Yn::Vector{Float64}
+    yb::Vector{Float64}
+    Ymax::Vector{Float64}
+    eNew::Vector{Float64}
+    cs::Vector{Float64}
 end
 
 function RcsAllocator(My, c=ones(size(My, 2)); maxIter=30, yMaxSlack=1e8, cSlack=1e3*maximum(c))
     m, n = size(My)
-    Ymax = [ones(n); yMaxSlack*ones(m)]
-    return RcsAllocator(m, n, My, zeros(n), c, maxIter, zeros(m, n), zeros(n), zeros(m), ones(Int, m), zeros(n + m), zeros(m), Ymax, zeros(n), cSlack*ones(m))
+    Ymax = vcat(ones(n), fill(yMaxSlack, m))
+    return RcsAllocator(m, n, My, zeros(n), c, maxIter, zeros(m, n), zeros(n), zeros(m), ones(Int64, m), zeros(n + m), zeros(m), Ymax, zeros(n), cSlack*ones(m))
 end
 
 function rcsAllocationSimplex(u, My, c=ones(size(My, 2)); maxIter=30)
