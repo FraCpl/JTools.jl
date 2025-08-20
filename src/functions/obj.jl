@@ -4,8 +4,9 @@ function mesh2obj(m, outfile, flipNormal=false)
             write(io, "v $(join(v, " "))\n")
         end
         if flipNormal
+            flpidx = [1, 3, 2]
             for f in faces(m)
-                write(io, "f $(join(f[[1, 3, 2]], " "))\n")
+                write(io, "f $(join(f[flpidx], " "))\n")
             end
         else
             for f in faces(m)
@@ -18,11 +19,11 @@ end
 # Pos is a matrix of 3d positions
 function grid2mesh(pos)
     Ny, Nx = size(pos)
-    f = fill(TriangleFace([0, 0, 0]), 2(Nx - 1)*(Ny - 1))
+    f = Vector{TriangleFace}(undef, 2(Nx - 1)*(Ny - 1))
     q = 1
     for j in 1:Nx-1, k in Ny*(j - 1)+1:Ny*j-1
-        f[q] = TriangleFace([k, k + 1, k + Ny + 1])
-        f[q+1] = TriangleFace([k, k + Ny + 1, k + Ny])
+        f[q] = TriangleFace(k, k + 1, k + Ny + 1)
+        f[q+1] = TriangleFace(k, k + Ny + 1, k + Ny)
         q += 2
     end
     return GeometryBasics.Mesh(Point3f.(pos[:]), f)
