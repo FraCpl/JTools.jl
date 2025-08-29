@@ -98,8 +98,9 @@ function plotSphere!(ax, radius=1.0, pos_I=zeros(3), n=256; kwargs...)
     θ = LinRange(0, π, n)       # Colatitude
     φ = LinRange(-π, π, 2n)     # Longitude
     posBody_I = [radius*[cos(φ)*sin(θ); sin(φ)*sin(θ); cos(θ)] + pos_I  for θ in θ, φ in φ]
+    @show kwargs
     surface!(ax, getindex.(posBody_I, 1), getindex.(posBody_I, 2), getindex.(posBody_I, 3);
-        shading=NoShading, kwargs...)
+        shading=NoShading)#, kwargs...)
 end
 
 function axisoff!(ax)
