@@ -11,9 +11,10 @@ using LinearAlgebra
 using Random
 using SpecialFunctions
 using FFTW
-using Convex, ECOS
 using Printf
 using Statistics
+using Convex, ECOS          # RCS Conf
+using Delaunay              # RCS Conf Analysis
 
 export trapz, cumtrapz
 include("functions/trapz.jl")
@@ -61,7 +62,8 @@ include("functions/gradientDescent.jl")
 export psd, psd2var
 include("functions/psd.jl")
 
-export rcsMixMatrix, rcsAllocation, rcsAnalysis, rcsEnvelope, plotRcs, plotRcs!, rcsAllocationSimplex, rcsAllocationSimplex!, RcsAllocator
+export rcsMixMatrix, rcsAllocation, rcsAnalysis, rcsEnvelope, plotRcs, plotRcs!
+export rcsAllocationSimplex, rcsAllocationSimplex!, RcsAllocator, analyzeRcsConf, analyzeRcsConf2D
 include("functions/rcsTools.jl")
 
 export mesh2obj, ObjModel, readObj, writeObj, grid2mesh

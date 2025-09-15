@@ -148,13 +148,15 @@ function rcsEnvelope(My; N=1000, unconstrained=false, v=sampleEvenlySphereFibona
     Utorque = deepcopy(v)
     Etorque = deepcopy(v)
     y = Variable(n)
+    Mfy = My[1:3, :]; Mτy = My[4:6, :]
+    z3 = zeros(3); on = ones(n); zn = zeros(n)
 
     for k in eachindex(v)
         # Force envelope - Maximize force along given direction v[k]
         if unconstrained
-            problem = maximize(v[k]'*My[1:3, :]*y, [y ≤ ones(n), y ≥ zeros(n)])
+            problem = maximize(v[k]'*Mfy*y, [y ≤ on, y ≥ zn])
         else
-            problem = maximize(v[k]'*My[1:3, :]*y, [(I - v[k]*v[k]')*My[1:3, :]*y == zeros(3), My[4:6, :]*y == zeros(3), y ≤ ones(n), y ≥ zeros(n)])
+            problem = maximize(v[k]'*Mfy*y, [(I - v[k]*v[k]')*Mfy*y == z3, Mτy*y == z3, y ≤ on, y ≥ zn])
         end
         Convex.solve!(problem, () -> ECOS.Optimizer(); silent=true)
         Uforce[k] .*= problem.optval
@@ -162,9 +164,9 @@ function rcsEnvelope(My; N=1000, unconstrained=false, v=sampleEvenlySphereFibona
 
         # Torque envelope - Maximize torque along given direction v[k]
         if unconstrained
-            problem = maximize(v[k]'*My[4:6, :]*y, [y ≤ ones(n), y ≥ zeros(n)])
+            problem = maximize(v[k]'*Mτy*y, [y ≤ on, y ≥ zn])
         else
-            problem = maximize(v[k]'*My[4:6, :]*y, [(I - v[k]*v[k]')*My[4:6, :]*y == zeros(3), My[1:3, :]*y == zeros(3), y ≤ ones(n), y ≥ zeros(n)])
+            problem = maximize(v[k]'*Mτy*y, [(I - v[k]*v[k]')*Mτy*y == z3, Mfy*y == z3, y ≤ on, y ≥ zn])
         end
         Convex.solve!(problem, () -> ECOS.Optimizer(); silent=true)
         Utorque[k] .*= problem.optval
@@ -188,28 +190,29 @@ function rcsEnvelope2(My; N=1000, unconstrained=false, v=sampleEvenlySphereFibon
     Utorque = deepcopy(v)
     Etorque = deepcopy(v)
     y = zeros(n)
+    Mfy = My[1:3, :]; Mτy = My[4:6, :]
 
     for k in eachindex(v)
         # Force envelope - Maximize force along given direction v[k]
         if unconstrained
-            idxOn = findall((v[k]'*My[1:3, :])[:] .> 0)
+            idxOn = findall((v[k]'*Mfy)[:] .> 0)
             y = zeros(n); y[idxOn] .= 1.0
         else
-            y = rcsAllocationSimplex(1e-11ones(6), [(I - v[k]*v[k]')*My[1:3, :]; My[4:6, :]], (-v[k]'*My[1:3, :])[:]; maxIter=1000)
+            y = rcsAllocationSimplex(1e-11ones(6), [(I - v[k]*v[k]')*Mfy; Mτy], (-v[k]'*Mfy)[:]; maxIter=1000)
         end
         # Convex.solve!(problem, () -> ECOS.Optimizer(); silent=true)
-        z = v[k]'*My[1:3, :]*y
+        z = v[k]'*Mfy*y
         Uforce[k] .*= z
         Eforce[k] .*= z/sum(y.*forceRCS)
 
         # Torque envelope - Maximize torque along given direction v[k]
         if unconstrained
-            idxOn = findall((v[k]'*My[4:6, :])[:] .> 0)
+            idxOn = findall((v[k]'*Mτy)[:] .> 0)
             y = zeros(n); y[idxOn] .= 1.0
         else
-            y = rcsAllocationSimplex(1e-11ones(6), [(I - v[k]*v[k]')*My[4:6, :]; My[1:3, :]], (-v[k]'*My[4:6, :])[:]; maxIter=1000)
+            y = rcsAllocationSimplex(1e-11ones(6), [(I - v[k]*v[k]')*Mτy; Mfy], (-v[k]'*Mτy)[:]; maxIter=1000)
         end
-        z = v[k]'*My[4:6, :]*y
+        z = v[k]'*Mτy*y
         Utorque[k] .*= z
         Etorque[k] .*= z/sum(y.*forceRCS)
     end
@@ -226,6 +229,89 @@ end
 
 function plotRcs!(ax, posRCS, dirRCS; scale=1.0)
     plotCone!.(ax, posRCS, -dirRCS; height=scale)
+end
+
+function analyzeRcsConf(posRCS, dirRCS, forceRCS=ones(length(posRCS)), posRef=zeros(3); N=600, unconstrained=false)
+
+    function points2mesh(x)
+        m = delaunay(mapreduce(permutedims, vcat, x))
+        f = [TriangleFace([r[1], r[2], r[3]]) for r in eachrow(m.convex_hull)]
+
+        # Check normals to fix shading
+        for i in eachindex(f)
+            i1, i2, i3 = f[i]
+            v1 = m.points[i1, :]
+            v2 = m.points[i2, :]
+            v3 = m.points[i3, :]
+            N = cross(v2 - v1, v3 - v2)
+            d = v1 + v2 + v3
+            if dot(N, d) < 0
+                f[i] = [i3, i2, i1]
+            end
+        end
+        return GeometryBasics.Mesh(Makie.to_vertices(m.points), f)
+    end
+
+    # Analysis
+    My = rcsMixMatrix(posRCS, dirRCS, forceRCS, posRef)
+    Umax, Umin, Emax, Emin = rcsAnalysis(My; unconstrained=unconstrained)
+    Uforce, Utorque, Eforce, Etorque = rcsEnvelope(My; N=N, unconstrained=unconstrained)
+
+    # Plot
+    fig = Figure(size=(1000, 600)); display(fig)
+    axf = Axis3(fig[1, 1], aspect=:data, title="Pure force and efficiency (T = 1 N)")
+    axt = Axis3(fig[1, 2], aspect=:data, title="Pure torque and efficiency (T = 1 N)")
+    # scatter3!(axf, Uforce; markersize=5)
+    # scatter3!(axf, Eforce; markersize=5)
+    # scatter3!(axt, Utorque; markersize=5)
+    # scatter3!(axt, Etorque; markersize=5)
+
+    GLMakie.mesh!(axf, points2mesh(Uforce); transparency=true, overdraw=false, color=:cyan, alpha=0.6)
+    GLMakie.mesh!(axf, points2mesh(Eforce); transparency=true, overdraw=false, color=:rosybrown2, alpha=0.6)
+    GLMakie.mesh!(axt, points2mesh(Utorque); transparency=true, overdraw=false, color=:cyan, alpha=0.6)
+    GLMakie.mesh!(axt, points2mesh(Etorque); transparency=true, overdraw=false, color=:rosybrown2, alpha=0.6)
+
+    titfx = "X: [$(round(Umin[1]; digits=3)), $(round(Umax[1]; digits=3))] N,    ηX: [$(round(Emin[1]; digits=3)), $(round(Emax[1]; digits=3))]"
+    titfy = "Y: [$(round(Umin[2]; digits=3)), $(round(Umax[2]; digits=3))] N,    ηY: [$(round(Emin[2]; digits=3)), $(round(Emax[2]; digits=3))]"
+    titfz = "Z: [$(round(Umin[3]; digits=3)), $(round(Umax[3]; digits=3))] N,    ηZ: [$(round(Emin[3]; digits=3)), $(round(Emax[3]; digits=3))]"
+    tittx = "X: [$(round(Umin[4]; digits=3)), $(round(Umax[4]; digits=3))] Nm,    rX: [$(round(Emin[4]; digits=3)), $(round(Emax[4]; digits=3))]"
+    titty = "Y: [$(round(Umin[5]; digits=3)), $(round(Umax[5]; digits=3))] Nm,    rY: [$(round(Emin[5]; digits=3)), $(round(Emax[5]; digits=3))]"
+    tittz = "Z: [$(round(Umin[6]; digits=3)), $(round(Umax[6]; digits=3))] Nm,    rZ: [$(round(Emin[6]; digits=3)), $(round(Emax[6]; digits=3))]"
+    Label(fig[2, 1], "$titfx\n$titfy\n$titfz", tellwidth = false, halign = :left, justification = :left)
+    Label(fig[2, 2], "$tittx\n$titty\n$tittz", tellwidth = false, halign = :left, justification = :left)
+
+    return fig
+end
+
+function analyzeRcsConf2D(posRCS, dirRCS, forceRCS=ones(length(posRCS)), posRef=zeros(3); N=50, unconstrained=false)
+
+    # Analysis
+    lat = range(-90, 90, N)[2:end-1]
+    lon = range(-180, 180, 2N)[1:end-1]
+    v = [[cosd(latk)*cosd(lonk); cosd(latk)*sind(lonk); sind(latk)] for lonk in lon, latk in lat]
+    My = rcsMixMatrix(posRCS, dirRCS, forceRCS, posRef)
+    rcsAnalysis(My; unconstrained=unconstrained)
+    Uforce, Utorque, Eforce, Etorque = rcsEnvelope(My; N=N, unconstrained=unconstrained, v=v)
+
+    # Plot
+    fig = Figure(size=(1000, 600)); display(fig)
+    ax1 = Axis(fig[1, 1]; aspect=DataAspect(), xlabel="Azimuth [deg]", ylabel="Elevation [deg]", title="Force Capacity [N]")
+    co1 = contourf!(ax1, lon, lat, norm.(Uforce); levels=100, colormap=:matter)
+    Colorbar(fig[1, 2], co1)
+
+    ax3 = Axis(fig[2, 1]; aspect=DataAspect(), xlabel="Azimuth [deg]", ylabel="Elevation [deg]", title="Force Efficiency [%]")
+    co3 = contourf!(ax3, lon, lat, 100norm.(Eforce); levels=100, colormap=:matter)
+    Colorbar(fig[2, 2], co3)
+
+    ax2 = Axis(fig[1, 3]; aspect=DataAspect(), xlabel="Azimuth [deg]", ylabel="Elevation [deg]", title="Torque Capacity [Nm]")
+    co2 = contourf!(ax2, lon, lat, norm.(Utorque); levels=100, colormap=:matter)
+    Colorbar(fig[1, 4], co2)
+
+    ax4 = Axis(fig[2, 3]; aspect=DataAspect(), xlabel="Azimuth [deg]", ylabel="Elevation [deg]", title="Torque Efficiency [m]")
+    co4 = contourf!(ax4, lon, lat, norm.(Etorque); levels=100, colormap=:matter)
+    Colorbar(fig[2, 4], co4)
+
+    return fig
 end
 
 function rcsAllocation(u, My, c=ones(size(My, 2)))
