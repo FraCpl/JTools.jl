@@ -14,7 +14,7 @@ using FFTW
 using Printf
 using Statistics
 using Convex, ECOS          # RCS Conf
-using Delaunay              # RCS Conf Analysis
+# using Delaunay              # RCS Conf Analysis [REMOVED --> This needs PyCall, not easy to install]
 
 export trapz, cumtrapz
 include("functions/trapz.jl")
