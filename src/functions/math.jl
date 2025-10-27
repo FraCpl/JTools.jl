@@ -1,5 +1,5 @@
 @inline crossmat(v) = [0.0 -v[3]  v[2]; v[3] 0.0 -v[1]; -v[2] v[1] 0.0];
-@inline logrange(a, b, length=100) = exp10.(range(a; stop=b, length=length))
+# @inline logrange(a, b, length=100) = exp10.(range(a; stop=b, length=length))
 
 @inline function unwrap!(x, period=2π)
 	y = convert(eltype(x), period)
@@ -44,6 +44,16 @@ end
         y += C[i]*x^(i - 1)
     end
     return y
+end
+
+function evalpoly!(y::Vector{T}, t::T, C) where T
+    y .= C[1]
+    tk = T(1)
+    @inbounds for i in 2:lastindex(C)
+        tk *= t
+        y .+= C[i].*tk
+    end
+    return
 end
 
 @inline function interp1(x, y, xi)

@@ -43,8 +43,8 @@ export plotBox, plotBox!, lines3!, scatter3!, multilines!, plotSphere!, plotSens
 export plotCorrelation, plotCorrelation!
 include("functions/makieTools.jl")
 
-export crossmat, logrange, unwrap!, modd, isMultiple, signum
-export polyfit, polyval, interp1, mul3x1!, mul3x3!
+export crossmat, unwrap!, modd, isMultiple, signum #, logrange
+export polyfit, polyval, interp1, mul3x1!, mul3x3!, evalpoly!
 include("functions/math.jl")
 
 export lsq, lsqWeight

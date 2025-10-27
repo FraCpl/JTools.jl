@@ -3,6 +3,7 @@ module Units
 m = 1.0
 cm = 1e-2
 mm = 1e-3
+μm = 1e-6
 km = 1e3
 ft = 0.3048
 inch = 0.0254
@@ -10,6 +11,7 @@ inch = 0.0254
 # Time
 s = 1.0
 ms = 1e-3
+μs = 1e-6
 min = 60.0
 hr = 3600.0
 hrs = 3600.0
@@ -34,6 +36,7 @@ kg = 1.0
 N = 1.0
 kN = 1e3
 mN = 1e-3
+μN = 1e-6
 
 # Angular rate
 rpm = 2π/min
@@ -49,6 +52,7 @@ ng = g*1e-9
 # Frequency
 Hz = 1.0
 mHz = 1e-3
+μHz = 1e-6
 kHz = 1e3
 
 # Constants
