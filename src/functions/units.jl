@@ -58,8 +58,8 @@ kHz = 1e3
 # Constants
 SPEED_OF_LIGHT = 299792458.0        # [m/s] Speed of light
 AU = 149597871e3                    # [m] Astronomical unit
-G = 6.67384e-11         	        # [m^3/kg/s^2] Universal gravitational constant
-PLANCK = 6.62607004E-34      	    # [m^2 kg/s] Planck's constant
+G = 6.67384e-11                 # [m^3/kg/s^2] Universal gravitational constant
+PLANCK = 6.62607004E-34          # [m^2 kg/s] Planck's constant
 BOLTZMANN = 1.380649E-23            # [m^2 kg/s^2/K] Boltzmann constant
 STEFAN_BOLTZMANN = 5.670374419e-8   # [W/m^2/K^4] Stefan-Boltzmann constant
 
@@ -74,8 +74,8 @@ function units(u::String)
     end
     return eval(Meta.parse(u))
 end
-convertUnits(from::String, to::String) = units(from)./units(to)
+convertUnits(from::String, to::String) = units(from) ./ units(to)
 
-units(val, u::String) = val.*units(u)
-convertUnits(val, from::String, to::String) = val.*convertUnits(from, to)
+units(val, u::String) = val .* units(u)
+convertUnits(val, from::String, to::String) = val .* convertUnits(from, to)
 end

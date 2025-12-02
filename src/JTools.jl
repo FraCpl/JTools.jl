@@ -37,9 +37,11 @@ include("functions/ode38.jl")
 export dm2dv, dm2dt, dv2dm, dv2dt
 include("functions/rocketEqs.jl")
 
-export theme_fra, plotMoon!, plotEarth!, axisoff!, plotframe!, transformModel, sensorFovModel
+export theme_fra,
+    plotMoon!, plotEarth!, axisoff!, plotframe!, transformModel, sensorFovModel
 export cuboidModel, plotCuboid!, plotCone!, plotCylinder!, plotEcdf, plotEcdf!
-export plotBox, plotBox!, lines3!, scatter3!, multilines!, plotSphere!, plotSensorFov!, mergeMesh
+export plotBox,
+    plotBox!, lines3!, scatter3!, multilines!, plotSphere!, plotSensorFov!, mergeMesh
 export plotCorrelation, plotCorrelation!
 include("functions/makieTools.jl")
 
@@ -63,7 +65,8 @@ export psd, psd2var
 include("functions/psd.jl")
 
 export rcsMixMatrix, rcsAllocation, rcsAnalysis, rcsEnvelope, plotRcs, plotRcs!
-export rcsAllocationSimplex, rcsAllocationSimplex!, RcsAllocator, analyzeRcsConf, analyzeRcsConf2D
+export rcsAllocationSimplex,
+    rcsAllocationSimplex!, RcsAllocator, analyzeRcsConf, analyzeRcsConf2D
 include("functions/rcsTools.jl")
 
 export mesh2obj, ObjModel, readObj, writeObj, grid2mesh

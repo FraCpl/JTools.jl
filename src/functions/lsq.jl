@@ -30,31 +30,36 @@ Author: F. Capolupo
 European Space Agency, 2020
 """
 function lsq(
-        r,                          # Residual function r(x)
-        x0;                         # Initial guess
-        lb=-Inf,                    # Lower bound on x [can be a vector]
-        ub=+Inf,                    # Upper bound on x [can be a vector]
-        algorithm=:lm,              # Algorithm choice, can be :lm (Levemberg-Marquardt), or :grad (classic gradient descent)
-        maxIter=1000,               # Maximum number of iterations
-        dxMax=+Inf,                 # Maximum correction step amplitude
-        tol=1e-9,                   # Tolerance on |dx| to declare convergence
-        tolRes=1e-9,                # Tolerance on the resiudals, J = r'*W*r
-        λ=1e-3,                     # Levemberg-Marquardt parameter
-        maxIterStuck=10,            # Number of iterations to declare the algorithm stuck
-        relTolStuck=0.1/100,        # Relative tolerance to declare the algorithm stuck
-        verbose=true,               # Show progress
-        userJacobian=false,         # input function does provide jacobian, i.e., r, H = r(x), where H = ∂r/∂x
-        W=r->ones(length(r)),       # Residuals weighting factor - shall return a vector
-    )
+    r,                          # Residual function r(x)
+    x0;                         # Initial guess
+    lb = -Inf,                    # Lower bound on x [can be a vector]
+    ub = +Inf,                    # Upper bound on x [can be a vector]
+    algorithm = :lm,              # Algorithm choice, can be :lm (Levemberg-Marquardt), or :grad (classic gradient descent)
+    maxIter = 1000,               # Maximum number of iterations
+    dxMax = +Inf,                 # Maximum correction step amplitude
+    tol = 1e-9,                   # Tolerance on |dx| to declare convergence
+    tolRes = 1e-9,                # Tolerance on the resiudals, J = r'*W*r
+    λ = 1e-3,                     # Levemberg-Marquardt parameter
+    maxIterStuck = 10,            # Number of iterations to declare the algorithm stuck
+    relTolStuck = 0.1/100,        # Relative tolerance to declare the algorithm stuck
+    verbose = true,               # Show progress
+    userJacobian = false,         # input function does provide jacobian, i.e., r, H = r(x), where H = ∂r/∂x
+    W = r->ones(length(r)),       # Residuals weighting factor - shall return a vector
+)
 
-    if algorithm != :lm; λ = 0.0; end
+    if algorithm != :lm
+        ;
+        λ = 0.0;
+    end
 
     x = copy(x0)
     δx = similar(x)
     rfun = isfun(r) ? [r] : r   # make r(x) a vector of functions
     nx = length(x0)
     apply(x, δx) = min.(max.(x + δx, lb), ub)
-    iter = 0; Jold = 0.0; iStuck = 0
+    iter = 0;
+    Jold = 0.0;
+    iStuck = 0
     while iter < maxIter
 
         # Evaluate residual, jacobian, and additional auxiliary matrices
@@ -62,7 +67,10 @@ function lsq(
 
         # Check convergence criterion
         if J ≤ tolRes
-            if verbose; println("Solution found: residual below tolerance"); end
+            if verbose
+                ;
+                println("Solution found: residual below tolerance");
+            end
             break
         end
 
@@ -73,7 +81,10 @@ function lsq(
             else
                 iStuck += 1
                 if iStuck > maxIterStuck
-                    if verbose; println("Solver stalled"); end
+                    if verbose
+                        ;
+                        println("Solver stalled");
+                    end
                     break
                 end
             end
@@ -94,10 +105,22 @@ function lsq(
 
         # Check convergence criterion
         err = norm(δx)
-        if verbose; @printf("Iteration: %s    δx: %.3e    λ: %.3e    res: %.3e\n", rpad("$iter", 5, " "), err, λ, J); end
+        if verbose
+            ;
+            @printf(
+                "Iteration: %s    δx: %.3e    λ: %.3e    res: %.3e\n",
+                rpad("$iter", 5, " "),
+                err,
+                λ,
+                J
+            );
+        end
 
         if err ≤ tol
-            if verbose; println("Solution found: correction norm below tolerance"); end
+            if verbose
+                ;
+                println("Solution found: correction norm below tolerance");
+            end
             x .= apply(x, δx)   # Correct the estimate before exiting the loop
             break
         end
@@ -136,7 +159,7 @@ function lsq_getResiduals(r, x, W, userJacobian)
     for rk in r
         res = userJacobian ? rk(x)[1] : rk(x)
         Wk = W(res)
-        J += res'*(Wk.*res)
+        J += res'*(Wk .* res)
     end
     return J/2
 end
@@ -155,7 +178,7 @@ function lsq_getJacobians(r, x, W, userJacobian, nx)
         end
         # res, H = userJacobian ? rk(x) : rk(x), ForwardDiff.jacobian(rk, x)
         Wk = W(res)
-        J += res'*(Wk.*res)
+        J += res'*(Wk .* res)
         HᵀW = H'*diagm(Wk)
         HᵀWH += HᵀW*H
         HᵀWy += HᵀW*res
@@ -172,11 +195,20 @@ end
 # [2] Chebrolu, Labe, Vysotska, Behley, Stachniss, Adaptive Robust Kernels for Non-Linear
 #     Least Squares problems
 # [3] Zhang, Parameter Estimation Techniques: A Tutorial with Application to Conic Fitting
-lsqWeight(x, α, c) =  ρ′.(x, α, c)./x
+lsqWeight(x, α, c) = ρ′.(x, α, c) ./ x
 
 function ρ′(x, α, c)
-    if abs(α - 2.0) < 1e-8; return x/c^2;        end
-    if abs(α) < 1e-8; return 2x/(x^2 + 2c^2);    end
-    if α == -Inf; return x/c^2*exp(-0.5(x/c)^2); end
+    if abs(α - 2.0) < 1e-8
+        ;
+        return x/c^2;
+    end
+    if abs(α) < 1e-8
+        ;
+        return 2x/(x^2 + 2c^2);
+    end
+    if α == -Inf
+        ;
+        return x/c^2*exp(-0.5(x/c)^2);
+    end
     return x/c^2*((x/c)^2/abs(α - 2) + 1)^(α/2 - 1)
 end

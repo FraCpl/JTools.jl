@@ -1,12 +1,14 @@
-function gradientDescent(f, x0;
-        maxIter=300,
-        dxMax=Inf*ones(length(x0)),
-        tol=1e-6,
-        η=1.0,
-        derivatives=:FiniteDiff,
-        method=:grad,
-        verbose=true,
-    )
+function gradientDescent(
+    f,
+    x0;
+    maxIter = 300,
+    dxMax = Inf*ones(length(x0)),
+    tol = 1e-6,
+    η = 1.0,
+    derivatives = :FiniteDiff,
+    method = :grad,
+    verbose = true,
+)
 
     x = copy(x0)
     nx = length(x)
@@ -16,7 +18,7 @@ function gradientDescent(f, x0;
     mx = zeros(nx)
     vx = zeros(nx)
 
-    for iter in 1:maxIter
+    for iter = 1:maxIter
         if derivatives == :ForwardDiff
             ∇f .= ForwardDiff.gradient(f, x)
         else
@@ -24,8 +26,8 @@ function gradientDescent(f, x0;
         end
 
         if method == :rmsprop
-            mx .= 0.9*mx + 0.1*∇f.^2
-            δx .= -η./(sqrt.(mx) .+ 1e-8).*∇f
+            mx .= 0.9*mx + 0.1*∇f .^ 2
+            δx .= -η ./ (sqrt.(mx) .+ 1e-8) .* ∇f
 
         elseif method == :momentum
             mx .= 0.3*mx + η*∇f
@@ -35,16 +37,17 @@ function gradientDescent(f, x0;
             # Adam gradient update
             # [1] Ruder, An overview of Gradient Descent Optimization Algorithms
             # [2] https://arxiv.org/pdf/1412.6980.pdf
-            β1 = 0.9; β2 = 0.999;
+            β1 = 0.9;
+            β2 = 0.999;
             b1 = 1 - β1^iter
             b2 = 1 - β2^iter
             mx .= β1*mx + (1 - β1)*∇f
-            vx .= β2*vx + (1 - β2)*∇f.^2
-            δx .= -η./(sqrt.(vx./b2) .+ 1e-8).*mx./b1
+            vx .= β2*vx + (1 - β2)*∇f .^ 2
+            δx .= -η ./ (sqrt.(vx ./ b2) .+ 1e-8) .* mx ./ b1
 
         elseif method == :gradls
             # Gradient descent with line search
-            ηOpt = goldenSectionSearch(n -> f(x - n*∇f), 0.0, 10η, verbose=false)
+            ηOpt = goldenSectionSearch(n -> f(x - n*∇f), 0.0, 10η, verbose = false)
             δx .= -ηOpt*∇f
 
         elseif method == :newton    # {CHECK: IS THIS WORKING?}

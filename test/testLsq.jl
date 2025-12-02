@@ -15,17 +15,18 @@ function main()
     y[70] -= 30
 
     f(x) = fun.(t, Ref(x)) - y
-    @time xEst1, ~ = lsq(f, xEst0; W=W, verbose=false)
+    @time xEst1, ~ = lsq(f, xEst0; W = W, verbose = false)
     res = [x -> [fun(t[k], x) - y[k]] for k in eachindex(t)]
-    @time xEst2, ~ = lsq(res, xEst0; W=W, verbose=false)
+    @time xEst2, ~ = lsq(res, xEst0; W = W, verbose = false)
 
     @show xEst1
     @show xEst2
 
-    fig, ax = scatter(t, y); display(fig)
-    lines!(ax, t, fun.(t, Ref(xTrue)); linewidth=3, color=:black)
-    lines!(ax, t, fun.(t, Ref(xEst1)); linewidth=3, color=:green)
-    lines!(ax, t, fun.(t, Ref(xEst2)); linewidth=3, color=:red, linestyle=:dash)
+    fig, ax = scatter(t, y);
+    display(fig)
+    lines!(ax, t, fun.(t, Ref(xTrue)); linewidth = 3, color = :black)
+    lines!(ax, t, fun.(t, Ref(xEst1)); linewidth = 3, color = :green)
+    lines!(ax, t, fun.(t, Ref(xEst2)); linewidth = 3, color = :red, linestyle = :dash)
 end
 main()
 

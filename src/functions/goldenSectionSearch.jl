@@ -1,5 +1,12 @@
 # Find minimum of unimodal scalar function f(x) of scalar variable x, with x ∈ [lb, ub]
-function goldenSectionSearch(f::Function, lb, ub; tol=1e-6, maxIter=1000, verbose=true)
+function goldenSectionSearch(
+    f::Function,
+    lb,
+    ub;
+    tol = 1e-6,
+    maxIter = 1000,
+    verbose = true,
+)
 
     # Initialize variables
     invϕ = 2/(√5 + 1)
@@ -9,7 +16,7 @@ function goldenSectionSearch(f::Function, lb, ub; tol=1e-6, maxIter=1000, verbos
     d = a + (b - a)*invϕ
 
     # Start iterations
-    for iter in 1:maxIter
+    for iter = 1:maxIter
         if abs(c - d) ≤ tol
             break
         end

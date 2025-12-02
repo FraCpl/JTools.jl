@@ -9,7 +9,7 @@ Compute the RCS mixing matrix ```My``` with respect to ```posRef```, so that:
 
 with 0 ≤ y ≤ 1.
 """
-function rcsMixMatrix(posRCS, dirRCS, forceRCS=ones(length(posRCS)), posRef=zeros(3))
+function rcsMixMatrix(posRCS, dirRCS, forceRCS = ones(length(posRCS)), posRef = zeros(3))
     n = length(posRCS)
     dir = normalize.(dirRCS)
     pos = posRCS .- Ref(posRef)
@@ -19,24 +19,35 @@ function rcsMixMatrix(posRCS, dirRCS, forceRCS=ones(length(posRCS)), posRef=zero
     else
         frc = forceRCS
     end
-    for i in 1:n
+    for i = 1:n
         My[:, i] = frc[i]*[dir[i]; pos[i] × dir[i]]
     end
     return My
 end
 
-function rcsMixMatrix(posRCS::Matrix, dirRCS::Matrix, forceRCS=ones(size(posRCS, 1)), posRef=zeros(3))
+function rcsMixMatrix(
+    posRCS::Matrix,
+    dirRCS::Matrix,
+    forceRCS = ones(size(posRCS, 1)),
+    posRef = zeros(3),
+)
     p = [pp for pp in eachrow(posRCS)]
     d = [dd for dd in eachrow(dirRCS)]
     return rcsMixMatrix(p, d, forceRCS, posRef)
 end
 
-function rcsAnalysis(My; unconstrained=false)
+function rcsAnalysis(My; unconstrained = false)
 
-    v = [[+1.0; 0.0; 0.0], [0.0; +1.0; 0.0], [0.0; 0.0; +1.0],
-         [-1.0; 0.0; 0.0], [0.0; -1.0; 0.0], [0.0; 0.0; -1.0]]
+    v = [
+        [+1.0; 0.0; 0.0],
+        [0.0; +1.0; 0.0],
+        [0.0; 0.0; +1.0],
+        [-1.0; 0.0; 0.0],
+        [0.0; -1.0; 0.0],
+        [0.0; 0.0; -1.0],
+    ]
 
-    Uforce, Utorque, Eforce, Etorque = rcsEnvelope(My; unconstrained=unconstrained, v=v)
+    Uforce, Utorque, Eforce, Etorque = rcsEnvelope(My; unconstrained = unconstrained, v = v)
     Umax = [norm.(Uforce[1:3]); norm.(Utorque[1:3])]
     Umin = -[norm.(Uforce[4:6]); norm.(Utorque[4:6])]
     Emax = [norm.(Eforce[1:3]); norm.(Etorque[1:3])]
@@ -64,38 +75,38 @@ end
 # Work in progress
 function rcsAnalysisMin(My, yMin)
     yTol = 1e-7
-    for i in 1:6
+    for i = 1:6
         u = [0.0; 0.0; 0.0; 0.0; 0.0; 0.0]
         u[i] = 1e-2
         y = rcsAllocation(u, My)
         ρ = yMin/minimum(y[y .> yTol])
         @show sum(y .> yTol)
-        @show uMin = ρ.*u[i]
+        @show uMin = ρ .* u[i]
     end
-    for i in 1:6
+    for i = 1:6
         u = [0.0; 0.0; 0.0; 0.0; 0.0; 0.0]
         u[i] = -1e-2
         y = rcsAllocation(u, My)
         ρ = yMin/minimum(y[y .> yTol])
         @show sum(y .> yTol)
-        @show uMin = ρ.*u[i]
+        @show uMin = ρ .* u[i]
     end
 end
 
 # Deserno, How to generate equidistributed points on the surface of a sphere
 # https://www.cmu.edu/biolphys/deserno/pdf/sphere_equi.pdf
-function sampleEvenlySphere(N=100; includeAxes=true)
+function sampleEvenlySphere(N = 100; includeAxes = true)
     a = 4π/N
     d = √a
     Mθ = round(Int, π/d)
     dθ = π/Mθ
     dϕ = a/dθ
 
-    r = Array{Vector{Float64}, 1}()
-    for m in 0:Mθ - 1
+    r = Array{Vector{Float64},1}()
+    for m = 0:(Mθ-1)
         θ = π*(m + 0.5)/Mθ
         Mϕ = round(Int, 2π*sin(θ)/dϕ)
-        for n in 0:Mϕ - 1
+        for n = 0:(Mϕ-1)
             ϕ = 2π*n/Mϕ
             sθ, cθ = sincos(θ)
             sϕ, cϕ = sincos(ϕ)
@@ -103,7 +114,7 @@ function sampleEvenlySphere(N=100; includeAxes=true)
         end
     end
     if includeAxes
-        for i in 1:3
+        for i = 1:3
             u = zeros(3)
             u[i] = 1.0
             push!(r, u)
@@ -114,11 +125,11 @@ function sampleEvenlySphere(N=100; includeAxes=true)
 end
 
 # https://arxiv.org/pdf/0912.4540
-function sampleEvenlySphereFibonacci(N=100; includeAxes=true)
+function sampleEvenlySphereFibonacci(N = 100; includeAxes = true)
     n = ceil(Int, N/2 - 0.5)
     Φ = (1 + √5)/2
-    r = Array{Vector{Float64}, 1}()
-    for i in -n:n
+    r = Array{Vector{Float64},1}()
+    for i = (-n):n
         slat = 2i/(2n + 1)
         lat = asin(slat)
         lon = 2π/Φ*mod(i, Φ)
@@ -127,7 +138,7 @@ function sampleEvenlySphereFibonacci(N=100; includeAxes=true)
         push!(r, [clat*clon; clat*slon; slat])
     end
     if includeAxes
-        for i in 1:3
+        for i = 1:3
             u = zeros(3)
             u[i] = 1.0
             push!(r, u)
@@ -137,7 +148,12 @@ function sampleEvenlySphereFibonacci(N=100; includeAxes=true)
     return r
 end
 
-function rcsEnvelope(My; N=1000, unconstrained=false, v=sampleEvenlySphereFibonacci(N; includeAxes=true))
+function rcsEnvelope(
+    My;
+    N = 1000,
+    unconstrained = false,
+    v = sampleEvenlySphereFibonacci(N; includeAxes = true),
+)
 
     v .= normalize.(v)
 
@@ -148,29 +164,38 @@ function rcsEnvelope(My; N=1000, unconstrained=false, v=sampleEvenlySphereFibona
     Utorque = deepcopy(v)
     Etorque = deepcopy(v)
     y = Variable(n)
-    Mfy = My[1:3, :]; Mτy = My[4:6, :]
-    z3 = zeros(3); on = ones(n); zn = zeros(n)
+    Mfy = My[1:3, :];
+    Mτy = My[4:6, :]
+    z3 = zeros(3);
+    on = ones(n);
+    zn = zeros(n)
 
     for k in eachindex(v)
         # Force envelope - Maximize force along given direction v[k]
         if unconstrained
             problem = maximize(v[k]'*Mfy*y, [y ≤ on, y ≥ zn])
         else
-            problem = maximize(v[k]'*Mfy*y, [(I - v[k]*v[k]')*Mfy*y == z3, Mτy*y == z3, y ≤ on, y ≥ zn])
+            problem = maximize(
+                v[k]'*Mfy*y,
+                [(I - v[k]*v[k]')*Mfy*y == z3, Mτy*y == z3, y ≤ on, y ≥ zn],
+            )
         end
-        Convex.solve!(problem, () -> ECOS.Optimizer(); silent=true)
+        Convex.solve!(problem, () -> ECOS.Optimizer(); silent = true)
         Uforce[k] .*= problem.optval
-        Eforce[k] .*= problem.optval/sum(y.value.*forceRCS)
+        Eforce[k] .*= problem.optval/sum(y.value .* forceRCS)
 
         # Torque envelope - Maximize torque along given direction v[k]
         if unconstrained
             problem = maximize(v[k]'*Mτy*y, [y ≤ on, y ≥ zn])
         else
-            problem = maximize(v[k]'*Mτy*y, [(I - v[k]*v[k]')*Mτy*y == z3, Mfy*y == z3, y ≤ on, y ≥ zn])
+            problem = maximize(
+                v[k]'*Mτy*y,
+                [(I - v[k]*v[k]')*Mτy*y == z3, Mfy*y == z3, y ≤ on, y ≥ zn],
+            )
         end
-        Convex.solve!(problem, () -> ECOS.Optimizer(); silent=true)
+        Convex.solve!(problem, () -> ECOS.Optimizer(); silent = true)
         Utorque[k] .*= problem.optval
-        Etorque[k] .*= problem.optval/sum(y.value.*forceRCS)
+        Etorque[k] .*= problem.optval/sum(y.value .* forceRCS)
     end
 
     return Uforce, Utorque, Eforce, Etorque
@@ -179,7 +204,12 @@ end
 # A bit less robust than using Convex.jl. Needs to set desired u to 1e-11 instead of zero,
 # because the simplex allocation algorithm only works for a meaningful desired output, i.e.,
 # u != 0.
-function rcsEnvelope2(My; N=1000, unconstrained=false, v=sampleEvenlySphereFibonacci(N; includeAxes=true))
+function rcsEnvelope2(
+    My;
+    N = 1000,
+    unconstrained = false,
+    v = sampleEvenlySphereFibonacci(N; includeAxes = true),
+)
 
     v .= normalize.(v)
 
@@ -190,83 +220,133 @@ function rcsEnvelope2(My; N=1000, unconstrained=false, v=sampleEvenlySphereFibon
     Utorque = deepcopy(v)
     Etorque = deepcopy(v)
     y = zeros(n)
-    Mfy = My[1:3, :]; Mτy = My[4:6, :]
+    Mfy = My[1:3, :];
+    Mτy = My[4:6, :]
 
     for k in eachindex(v)
         # Force envelope - Maximize force along given direction v[k]
         if unconstrained
             idxOn = findall((v[k]'*Mfy)[:] .> 0)
-            y = zeros(n); y[idxOn] .= 1.0
+            y = zeros(n);
+            y[idxOn] .= 1.0
         else
-            y = rcsAllocationSimplex(1e-11ones(6), [(I - v[k]*v[k]')*Mfy; Mτy], (-v[k]'*Mfy)[:]; maxIter=1000)
+            y = rcsAllocationSimplex(
+                1e-11ones(6),
+                [(I - v[k]*v[k]')*Mfy; Mτy],
+                (-v[k]'*Mfy)[:];
+                maxIter = 1000,
+            )
         end
         # Convex.solve!(problem, () -> ECOS.Optimizer(); silent=true)
         z = v[k]'*Mfy*y
         Uforce[k] .*= z
-        Eforce[k] .*= z/sum(y.*forceRCS)
+        Eforce[k] .*= z/sum(y .* forceRCS)
 
         # Torque envelope - Maximize torque along given direction v[k]
         if unconstrained
             idxOn = findall((v[k]'*Mτy)[:] .> 0)
-            y = zeros(n); y[idxOn] .= 1.0
+            y = zeros(n);
+            y[idxOn] .= 1.0
         else
-            y = rcsAllocationSimplex(1e-11ones(6), [(I - v[k]*v[k]')*Mτy; Mfy], (-v[k]'*Mτy)[:]; maxIter=1000)
+            y = rcsAllocationSimplex(
+                1e-11ones(6),
+                [(I - v[k]*v[k]')*Mτy; Mfy],
+                (-v[k]'*Mτy)[:];
+                maxIter = 1000,
+            )
         end
         z = v[k]'*Mτy*y
         Utorque[k] .*= z
-        Etorque[k] .*= z/sum(y.*forceRCS)
+        Etorque[k] .*= z/sum(y .* forceRCS)
     end
 
     return Uforce, Utorque, Eforce, Etorque
 end
 
-function plotRcs(posRCS, dirRCS; scale=1.0)
-    f = Figure(); display(f)
+function plotRcs(posRCS, dirRCS; scale = 1.0)
+    f = Figure();
+    display(f)
     ax = LScene(f[1, 1])
-    plotRcs!(ax, posRCS, dirRCS; scale=scale)
+    plotRcs!(ax, posRCS, dirRCS; scale = scale)
     return f, ax
 end
 
-function plotRcs!(ax, posRCS, dirRCS; scale=1.0)
-    plotCone!.(ax, posRCS, -dirRCS; height=scale)
+function plotRcs!(ax, posRCS, dirRCS; scale = 1.0)
+    plotCone!.(ax, posRCS, -dirRCS; height = scale)
 end
 
-function analyzeRcsConf2D(posRCS, dirRCS, forceRCS=ones(length(posRCS)), posRef=zeros(3); N=50, unconstrained=false)
+function analyzeRcsConf2D(
+    posRCS,
+    dirRCS,
+    forceRCS = ones(length(posRCS)),
+    posRef = zeros(3);
+    N = 50,
+    unconstrained = false,
+)
 
     # Analysis
-    lat = range(-90, 90, N)[2:end-1]
-    lon = range(-180, 180, 2N)[1:end-1]
-    v = [[cosd(latk)*cosd(lonk); cosd(latk)*sind(lonk); sind(latk)] for lonk in lon, latk in lat]
+    lat = range(-90, 90, N)[2:(end-1)]
+    lon = range(-180, 180, 2N)[1:(end-1)]
+    v = [
+        [cosd(latk)*cosd(lonk); cosd(latk)*sind(lonk); sind(latk)] for
+        lonk in lon, latk in lat
+    ]
     My = rcsMixMatrix(posRCS, dirRCS, forceRCS, posRef)
-    rcsAnalysis(My; unconstrained=unconstrained)
-    Uforce, Utorque, Eforce, Etorque = rcsEnvelope(My; N=N, unconstrained=unconstrained, v=v)
+    rcsAnalysis(My; unconstrained = unconstrained)
+    Uforce, Utorque, Eforce, Etorque =
+        rcsEnvelope(My; N = N, unconstrained = unconstrained, v = v)
 
     # Plot
-    fig = Figure(size=(1000, 600)); display(fig)
-    ax1 = Axis(fig[1, 1]; aspect=DataAspect(), xlabel="Azimuth [deg]", ylabel="Elevation [deg]", title="Force Capacity [N]")
-    co1 = contourf!(ax1, lon, lat, norm.(Uforce); levels=100, colormap=:matter)
+    fig = Figure(size = (1000, 600));
+    display(fig)
+    ax1 = Axis(
+        fig[1, 1];
+        aspect = DataAspect(),
+        xlabel = "Azimuth [deg]",
+        ylabel = "Elevation [deg]",
+        title = "Force Capacity [N]",
+    )
+    co1 = contourf!(ax1, lon, lat, norm.(Uforce); levels = 100, colormap = :matter)
     Colorbar(fig[1, 2], co1)
 
-    ax3 = Axis(fig[2, 1]; aspect=DataAspect(), xlabel="Azimuth [deg]", ylabel="Elevation [deg]", title="Force Efficiency [%]")
-    co3 = contourf!(ax3, lon, lat, 100norm.(Eforce); levels=100, colormap=:matter)
+    ax3 = Axis(
+        fig[2, 1];
+        aspect = DataAspect(),
+        xlabel = "Azimuth [deg]",
+        ylabel = "Elevation [deg]",
+        title = "Force Efficiency [%]",
+    )
+    co3 = contourf!(ax3, lon, lat, 100norm.(Eforce); levels = 100, colormap = :matter)
     Colorbar(fig[2, 2], co3)
 
-    ax2 = Axis(fig[1, 3]; aspect=DataAspect(), xlabel="Azimuth [deg]", ylabel="Elevation [deg]", title="Torque Capacity [Nm]")
-    co2 = contourf!(ax2, lon, lat, norm.(Utorque); levels=100, colormap=:matter)
+    ax2 = Axis(
+        fig[1, 3];
+        aspect = DataAspect(),
+        xlabel = "Azimuth [deg]",
+        ylabel = "Elevation [deg]",
+        title = "Torque Capacity [Nm]",
+    )
+    co2 = contourf!(ax2, lon, lat, norm.(Utorque); levels = 100, colormap = :matter)
     Colorbar(fig[1, 4], co2)
 
-    ax4 = Axis(fig[2, 3]; aspect=DataAspect(), xlabel="Azimuth [deg]", ylabel="Elevation [deg]", title="Torque Efficiency [m]")
-    co4 = contourf!(ax4, lon, lat, norm.(Etorque); levels=100, colormap=:matter)
+    ax4 = Axis(
+        fig[2, 3];
+        aspect = DataAspect(),
+        xlabel = "Azimuth [deg]",
+        ylabel = "Elevation [deg]",
+        title = "Torque Efficiency [m]",
+    )
+    co4 = contourf!(ax4, lon, lat, norm.(Etorque); levels = 100, colormap = :matter)
     Colorbar(fig[2, 4], co4)
 
     return fig
 end
 
-function rcsAllocation(u, My, c=ones(size(My, 2)))
+function rcsAllocation(u, My, c = ones(size(My, 2)))
     n = size(My, 2)
     y = Variable(n)
     problem = minimize(c'*y, [My*y == u, y ≤ ones(n), y ≥ zeros(n)])
-    Convex.solve!(problem, () -> ECOS.Optimizer(); silent=true)
+    Convex.solve!(problem, () -> ECOS.Optimizer(); silent = true)
     yv = y.value
     yv[yv .< 1e-8] .= 0.0
     return yv
@@ -320,21 +400,46 @@ mutable struct RcsAllocator
     cs::Vector{Float64}
 end
 
-function RcsAllocator(My, c=ones(size(My, 2)); maxIter=30, yMaxSlack=1e8, cSlack=1e3*maximum(c))
+function RcsAllocator(
+    My,
+    c = ones(size(My, 2));
+    maxIter = 30,
+    yMaxSlack = 1e8,
+    cSlack = 1e3*maximum(c),
+)
     m, n = size(My)
     Ymax = vcat(ones(n), fill(yMaxSlack, m))
-    return RcsAllocator(m, n, My, zeros(n), c, maxIter, zeros(m, n), zeros(n), zeros(m), ones(Int64, m), zeros(n + m), zeros(m), Ymax, zeros(n), cSlack*ones(m))
+    return RcsAllocator(
+        m,
+        n,
+        My,
+        zeros(n),
+        c,
+        maxIter,
+        zeros(m, n),
+        zeros(n),
+        zeros(m),
+        ones(Int64, m),
+        zeros(n + m),
+        zeros(m),
+        Ymax,
+        zeros(n),
+        cSlack*ones(m),
+    )
 end
 
-function rcsAllocationSimplex(u, My, c=ones(size(My, 2)); maxIter=30)
-    r = RcsAllocator(My, c; maxIter=maxIter)
+function rcsAllocationSimplex(u, My, c = ones(size(My, 2)); maxIter = 30)
+    r = RcsAllocator(My, c; maxIter = maxIter)
     rcsAllocationSimplex!(r, u)
     return r.y
 end
 
 function rcsAllocationSimplex!(r::RcsAllocator, u)
     r.y .= 0.0
-    if iszero(u); return; end
+    if iszero(u)
+        ;
+        return;
+    end
 
     # Aliases
     m = r.m             # Number of dof (output size)
@@ -363,9 +468,9 @@ function rcsAllocationSimplex!(r::RcsAllocator, u)
     # Setup the initial solution
     # E .= -xsign.(u).*My
     E .= My
-    @inbounds for i in 1:m
+    @inbounds for i = 1:m
         if u[i] > 0.0
-            @inbounds for j in 1:n
+            @inbounds for j = 1:n
                 E[i, j] *= -1.0
             end
         end
@@ -379,20 +484,24 @@ function rcsAllocationSimplex!(r::RcsAllocator, u)
     Yn .= 0.0
 
     # Loop until all gradient components are positive
-    @inbounds for _ in 1:r.maxIter
+    @inbounds for _ = 1:r.maxIter
 
         # Find the non-basis thruster that is candidate to enter the basis
         # The thrusters which maximize '∇z' is invited in the basis
         # (and if ∇zMin > 0, i.e. if there is still room for improvement)
-        ∇zMin = ∇z[1]; iIn = 1
-        @inbounds for i in 2:n
+        ∇zMin = ∇z[1];
+        iIn = 1
+        @inbounds for i = 2:n
             if ∇z[i] < ∇zMin
                 ∇zMin = ∇z[i]
                 iIn = i
             end
         end
         # ∇zMin, iIn = findmin(first, ∇z)
-        if ∇zMin ≥ 0.0; break; end  # No further improvement possible
+        if ∇zMin ≥ 0.0
+            ;
+            break;
+        end  # No further improvement possible
 
         # Determine the candidate base thrusters to leave the basis
         # This corresponds to the basis thruster that first reaches 0 or its upper bound when
@@ -400,7 +509,7 @@ function rcsAllocationSimplex!(r::RcsAllocator, u)
         r = Inf                 # Smallest base variable variation ratio before reaching bounds
         jOut = 0                # Local (i.e., within basis) index of the first base variable to reach bounds
 
-        @inbounds for j in 1:m
+        @inbounds for j = 1:m
             e[j] = E[j, iIn]    # Local vector indicating the rate of change of the base thrusters due to the value of the invited thruster
             rj = r
             if e[j] < 0     # A change in the non-base thrust will cause the base thrust to reduce its thrust level
@@ -430,7 +539,7 @@ function rcsAllocationSimplex!(r::RcsAllocator, u)
             # goes either to 0 or to its upper bound. The basis is not modified.
             Yn[iIn] = Ymax[iIn] - Yn[iIn]       # Update the non-basis vector list. With this operation, if Yn is 0 then it goes to Ymax, if Yn = Ymax then it goes to 0
 
-            @inbounds for k in 1:m
+            @inbounds for k = 1:m
                 yb[k] += Ymax[iIn]*e[k]         # Update the on times for the jets in the basis (substract the effects of having an out of basis thruster at its upper bound)
 
                 # Switching polarity to indicate that now thruster ratio y must be decreased (or
@@ -445,7 +554,7 @@ function rcsAllocationSimplex!(r::RcsAllocator, u)
             # another base variable does, and before the non-base one reaches either zero
             # or its upper bound. The base variable goes to its bound and exits the base.
             # The non-base variable enters the basis with a non-zero value.
-            iOut = iBase[jOut]   	# Global index of the thruster removed from the basis
+            iOut = iBase[jOut]   # Global index of the thruster removed from the basis
 
             if e[jOut] > 0
                 # CASE 2a: the base variable reaches its upper bound
@@ -455,7 +564,7 @@ function rcsAllocationSimplex!(r::RcsAllocator, u)
                 # from its upper bound rather than increased from zero (only done for real
                 # thrusters, and not slack variables)
                 if iOut ≤ n
-                    @inbounds for k in 1:m
+                    @inbounds for k = 1:m
                         E[k, iOut] = -E[k, iOut]
                     end
                     ∇z[iOut] = -∇z[iOut]
@@ -467,7 +576,7 @@ function rcsAllocationSimplex!(r::RcsAllocator, u)
 
             # Update basis
             iBase[jOut] = iIn               # Update list of thrusters in basis (replace basis variables with candidate non-basis one)
-            @inbounds for k in 1:m
+            @inbounds for k = 1:m
                 yb[k] += r*e[k]             # Update the solution (substract the effects of having removed one thruster from basis)
             end
 
@@ -480,7 +589,7 @@ function rcsAllocationSimplex!(r::RcsAllocator, u)
                 # thruster ratio y must be increased rather than decreased from
                 # its upper bound
                 # E[:, iIn] = -E[:, iIn]
-                @inbounds for k in 1:m
+                @inbounds for k = 1:m
                     E[k, iIn] = -E[k, iIn]
                 end
                 ∇z[iIn] = -∇z[iIn]
@@ -514,7 +623,7 @@ function rcsAllocationSimplex!(r::RcsAllocator, u)
     # Build the final solution Y. Y includes the 'm' base variables, plus any
     # other non-base variable at its upper bound.
     Yn[iBase] .= yb     # Merge non-base and base variables
-    @inbounds for i in 1:n
+    @inbounds for i = 1:n
         y[i] = Yn[i]         # Remove slack variables from solution
     end
 
