@@ -18,9 +18,9 @@ function ransac(
     funDist,        # Fit + distance function
     N,                      # Total number of available measurements/data points
     Nmin;                   # Minimum number of measurements required to compute a fit
-    maxIter = 100,            # Maximum number of iterations
-    threshold = 0.1,          # Inliers distance threshold
-    verbose = true,
+    maxIter=100,            # Maximum number of iterations
+    threshold=0.1,          # Inliers distance threshold
+    verbose=true,
 )
 
     # Init parameters and allocations
@@ -30,7 +30,7 @@ function ransac(
     iFit = zeros(Int, Nmin)
 
     # Init iterations
-    for _ = 1:maxIter
+    for _ in 1:maxIter
         # Randomly select Nmin points to be used to fit the model
         iFit .= randperm(N)[1:Nmin]
 

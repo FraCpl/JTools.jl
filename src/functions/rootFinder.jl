@@ -10,12 +10,12 @@ European Space Agency, 2024
 function rootFinder(
     f::Function,
     x0::Vector;
-    tol = 1e-9,
-    maxIter = 500,
-    dxMax = [Inf for _ = 1:length(x0)],
-    verbose = true,
-    method = :Broyden,     # :NewtonRaphson, :Broyden, :ModifiedBroyden
-    derivatives = :FiniteDiff,   # :ForwardDiff or :FiniteDiff (only for NewtonRaphson)
+    tol=1e-9,
+    maxIter=500,
+    dxMax=[Inf for _ in 1:length(x0)],
+    verbose=true,
+    method=:Broyden,     # :NewtonRaphson, :Broyden, :ModifiedBroyden
+    derivatives=:FiniteDiff,   # :ForwardDiff or :FiniteDiff (only for NewtonRaphson)
 )
 
     # Initialize variables
@@ -29,7 +29,7 @@ function rootFinder(
     yOld = copy(y)
 
     # Start iterations
-    for iter = 1:maxIter
+    for iter in 1:maxIter
 
         # Check function value
         if iter > 1

@@ -16,4 +16,4 @@ function distFun(id)
     return abs.(a*x - y .+ b) ./ sqrt(a*a + 1)  # orthogonal distance to line
 end
 
-@btime ransac(distFun, length(x), 2; verbose = false)
+@btime ransac(distFun, length(x), 2; verbose=false)

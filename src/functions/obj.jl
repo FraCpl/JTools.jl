@@ -1,5 +1,5 @@
-function mesh2obj(m, outfile, flipNormal = false)
-    open(outfile, write = true) do io
+function mesh2obj(m, outfile, flipNormal=false)
+    open(outfile; write=true) do io
         for v in coordinates(m)
             write(io, "v $(join(v, " "))\n")
         end
@@ -21,9 +21,9 @@ function grid2mesh(pos)
     Ny, Nx = size(pos)
     f = Vector{TriangleFace}(undef, 2(Nx - 1)*(Ny - 1))
     q = 1
-    for j = 1:(Nx-1), k = (Ny*(j-1)+1):(Ny*j-1)
+    for j in 1:(Nx - 1), k in (Ny * (j - 1) + 1):(Ny * j - 1)
         f[q] = TriangleFace(k, k + 1, k + Ny + 1)
-        f[q+1] = TriangleFace(k, k + Ny + 1, k + Ny)
+        f[q + 1] = TriangleFace(k, k + Ny + 1, k + Ny)
         q += 2
     end
     return GeometryBasics.Mesh(Point3f.(pos[:]), f)
@@ -36,7 +36,7 @@ struct ObjModel
     normals::Vector{Vector{Float64}}
 end
 
-function ObjModel(faces, vertices; computeNormals = false, computeEdges = false)
+function ObjModel(faces, vertices; computeNormals=false, computeEdges=false)
     # Compute model edges
     e = Vector{Vector{Int}}(undef, 0)
     if computeEdges
@@ -55,7 +55,7 @@ function ObjModel(faces, vertices; computeNormals = false, computeEdges = false)
 end
 
 function writeObj(obj::ObjModel, outfile::String)
-    open(outfile, write = true) do io
+    open(outfile; write=true) do io
         for v in obj.vertices
             write(io, "v $(join(v, " "))\n")
         end
@@ -65,7 +65,7 @@ function writeObj(obj::ObjModel, outfile::String)
     end
 end
 
-function readObj(objfile::String; computeNormals = false, computeEdges = false)
+function readObj(objfile::String; computeNormals=false, computeEdges=false)
     v = Vector{Vector{Float64}}(undef, 0)
     f = Vector{Vector{Int}}(undef, 0)
     open(objfile) do fl
@@ -73,12 +73,12 @@ function readObj(objfile::String; computeNormals = false, computeEdges = false)
             s = readline(fl)
             if length(s) > 2
                 if s[1:2] == "v "
-                    push!(v, parse.(Float64, split(s, " "; keepempty = false)[2:4]))
+                    push!(v, parse.(Float64, split(s, " "; keepempty=false)[2:4]))
                 end
                 if s[1:2] == "f "
                     fk = Vector{Int}(undef, 0)
-                    for fc in split(s, " "; keepempty = false)[2:end]
-                        push!(fk, parse(Int, split(fc, "/"; keepempty = false)[1]))
+                    for fc in split(s, " "; keepempty=false)[2:end]
+                        push!(fk, parse(Int, split(fc, "/"; keepempty=false)[1]))
                     end
                     push!(f, fk)
                 end

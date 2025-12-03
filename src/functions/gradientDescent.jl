@@ -1,15 +1,4 @@
-function gradientDescent(
-    f,
-    x0;
-    maxIter = 300,
-    dxMax = Inf*ones(length(x0)),
-    tol = 1e-6,
-    η = 1.0,
-    derivatives = :FiniteDiff,
-    method = :grad,
-    verbose = true,
-)
-
+function gradientDescent(f, x0; maxIter=300, dxMax=Inf*ones(length(x0)), tol=1e-6, η=1.0, derivatives=:FiniteDiff, method=:grad, verbose=true)
     x = copy(x0)
     nx = length(x)
     δx = zeros(nx)
@@ -18,7 +7,7 @@ function gradientDescent(
     mx = zeros(nx)
     vx = zeros(nx)
 
-    for iter = 1:maxIter
+    for iter in 1:maxIter
         if derivatives == :ForwardDiff
             ∇f .= ForwardDiff.gradient(f, x)
         else
@@ -47,7 +36,7 @@ function gradientDescent(
 
         elseif method == :gradls
             # Gradient descent with line search
-            ηOpt = goldenSectionSearch(n -> f(x - n*∇f), 0.0, 10η, verbose = false)
+            ηOpt = goldenSectionSearch(n -> f(x - n*∇f), 0.0, 10η; verbose=false)
             δx .= -ηOpt*∇f
 
         elseif method == :newton    # {CHECK: IS THIS WORKING?}

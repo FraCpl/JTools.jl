@@ -38,9 +38,9 @@ function interpfEcdf(x, F, Fi)
         ;
         return NaN;
     end        # TODO: CHECK!
-    F0 = F[id1-1]
+    F0 = F[id1 - 1]
     F1 = F[id1]
-    x0 = x[id1-1]
+    x0 = x[id1 - 1]
     x1 = x[id1]
     return x0 + (x1 - x0)/(F1 - F0)*(Fi - F0)
 end

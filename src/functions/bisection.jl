@@ -1,6 +1,6 @@
 # Find minimum of unimodal scalar function f(x) of scalar variable x, with x ∈ [lb, ub]
 # caution: f(a) must be != than f(b)
-function bisection(f::Function, lb, ub; tol = 1e-6, maxIter = 1000, verbose = true)
+function bisection(f::Function, lb, ub; tol=1e-6, maxIter=1000, verbose=true)
 
     # Initialize variables
     a = lb
@@ -14,7 +14,7 @@ function bisection(f::Function, lb, ub; tol = 1e-6, maxIter = 1000, verbose = tr
     end
 
     # Start iterations
-    for iter = 1:maxIter
+    for iter in 1:maxIter
         c = (a + b)/2
         fc = f(c)
         if abs(fc) < tol

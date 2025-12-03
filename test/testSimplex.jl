@@ -198,7 +198,7 @@ function testsplx(data)
     r = RcsAllocator(My)
     uerr = [];
     yerr = []
-    for i = 1:100000
+    for i in 1:100000
         y = rand(N)
         # y[5] = 1.0
         # y[9] = 1.0
@@ -230,7 +230,7 @@ function testsplxAlloc(data)
     y = rand(N)
     u = My * y
     @btime rcsAllocationSimplex!($r, $u)
-    return
+    return nothing
 end
 
 @show testsplx(Conf1())

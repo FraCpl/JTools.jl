@@ -32,21 +32,20 @@ European Space Agency, 2020
 function lsq(
     r,                          # Residual function r(x)
     x0;                         # Initial guess
-    lb = -Inf,                    # Lower bound on x [can be a vector]
-    ub = +Inf,                    # Upper bound on x [can be a vector]
-    algorithm = :lm,              # Algorithm choice, can be :lm (Levemberg-Marquardt), or :grad (classic gradient descent)
-    maxIter = 1000,               # Maximum number of iterations
-    dxMax = +Inf,                 # Maximum correction step amplitude
-    tol = 1e-9,                   # Tolerance on |dx| to declare convergence
-    tolRes = 1e-9,                # Tolerance on the resiudals, J = r'*W*r
-    λ = 1e-3,                     # Levemberg-Marquardt parameter
-    maxIterStuck = 10,            # Number of iterations to declare the algorithm stuck
-    relTolStuck = 0.1/100,        # Relative tolerance to declare the algorithm stuck
-    verbose = true,               # Show progress
-    userJacobian = false,         # input function does provide jacobian, i.e., r, H = r(x), where H = ∂r/∂x
-    W = r->ones(length(r)),       # Residuals weighting factor - shall return a vector
+    lb=(-Inf),                    # Lower bound on x [can be a vector]
+    ub=(+Inf),                    # Upper bound on x [can be a vector]
+    algorithm=:lm,              # Algorithm choice, can be :lm (Levemberg-Marquardt), or :grad (classic gradient descent)
+    maxIter=1000,               # Maximum number of iterations
+    dxMax=(+Inf),                 # Maximum correction step amplitude
+    tol=1e-9,                   # Tolerance on |dx| to declare convergence
+    tolRes=1e-9,                # Tolerance on the resiudals, J = r'*W*r
+    λ=1e-3,                     # Levemberg-Marquardt parameter
+    maxIterStuck=10,            # Number of iterations to declare the algorithm stuck
+    relTolStuck=0.1/100,        # Relative tolerance to declare the algorithm stuck
+    verbose=true,               # Show progress
+    userJacobian=false,         # input function does provide jacobian, i.e., r, H = r(x), where H = ∂r/∂x
+    W=r->ones(length(r)),       # Residuals weighting factor - shall return a vector
 )
-
     if algorithm != :lm
         ;
         λ = 0.0;
@@ -107,13 +106,7 @@ function lsq(
         err = norm(δx)
         if verbose
             ;
-            @printf(
-                "Iteration: %s    δx: %.3e    λ: %.3e    res: %.3e\n",
-                rpad("$iter", 5, " "),
-                err,
-                λ,
-                J
-            );
+            @printf("Iteration: %s    δx: %.3e    λ: %.3e    res: %.3e\n", rpad("$iter", 5, " "), err, λ, J);
         end
 
         if err ≤ tol
