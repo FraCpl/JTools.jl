@@ -5,9 +5,9 @@ function ode38(f!, x0, tspan; nSteps=100)
     x = copy(x0)
     t = tspan[1]
     h = (tspan[2] - tspan[1])/nSteps
-    K1 = similar(x);
+    K1 = similar(x)
     K2 = similar(x)
-    K3 = similar(x);
+    K3 = similar(x)
     K4 = similar(x)
     for _ in 1:nSteps
         f!(K1, t, x)

@@ -26,8 +26,8 @@ function gradientDescent(f, x0; maxIter=300, dxMax=Inf*ones(length(x0)), tol=1e-
             # Adam gradient update
             # [1] Ruder, An overview of Gradient Descent Optimization Algorithms
             # [2] https://arxiv.org/pdf/1412.6980.pdf
-            β1 = 0.9;
-            β2 = 0.999;
+            β1 = 0.9
+            β2 = 0.999
             b1 = 1 - β1^iter
             b2 = 1 - β2^iter
             mx .= β1*mx + (1 - β1)*∇f

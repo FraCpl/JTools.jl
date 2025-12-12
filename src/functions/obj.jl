@@ -1,23 +1,65 @@
-function mesh2obj(m, outfile, flipNormal=false)
+function mesh2obj(m, outfile::String, flipNormal::Bool=false)
     open(outfile; write=true) do io
         for v in coordinates(m)
-            write(io, "v $(join(v, " "))\n")
+            println(io, "v ", v[1], " ", v[2], " ", v[3])
         end
         if flipNormal
-            flpidx = [1, 3, 2]
             for f in faces(m)
-                write(io, "f $(join(f[flpidx], " "))\n")
+                println(io, "f ", f[1], " ", f[3], " ", f[2])
             end
         else
             for f in faces(m)
-                write(io, "f $(join(f, " "))\n")
+                println(io, "f ", f[1], " ", f[2], " ", f[3])
+            end
+        end
+    end
+end
+
+function grid2obj(pos::Matrix{T}, outfile::String, flipNormal::Bool=false) where {T}
+    Ny, Nx = size(pos)
+    iMax = 1
+    idx = zeros(Int, Ny, Nx)
+
+    open(outfile; write=true) do io
+        # Write vertices coordinates
+        @inbounds for i in 1:Nx, j in 1:Ny
+            p = pos[j, i]
+            if isnan(p[1])
+                continue
+            end
+            idx[j, i] = iMax
+            iMax += 1
+            println(io, "v ", p[1], " ", p[2], " ", p[3])
+        end
+
+        # Write faces
+        @inbounds for i in 1:Nx-1, j in 1:Ny-1
+            k1 = idx[j,   i]
+            k2 = idx[j+1, i]
+            k3 = idx[j+1, i+1]
+            k4 = idx[j,   i+1]
+
+            if k1 > 0 && k2 > 0 && k3 > 0
+                if flipNormal
+                    println(io, "f ", k1, " ", k3, " ", k2)
+                else
+                    println(io, "f ", k1, " ", k2, " ", k3)
+                end
+            end
+
+            if k1 > 0 && k3 > 0 && k4 > 0
+                if flipNormal
+                    println(io, "f ", k1, " ", k4, " ", k3)
+                else
+                    println(io, "f ", k1, " ", k3, " ", k4)
+                end
             end
         end
     end
 end
 
 # Pos is a matrix of 3d positions
-function grid2mesh(pos)
+function grid2mesh(pos::Matrix{T}) where {T}
     Ny, Nx = size(pos)
     f = Vector{TriangleFace}(undef, 2(Nx - 1)*(Ny - 1))
     q = 1
@@ -40,15 +82,13 @@ function ObjModel(faces, vertices; computeNormals=false, computeEdges=false)
     # Compute model edges
     e = Vector{Vector{Int}}(undef, 0)
     if computeEdges
-        ;
-        e = compEdges(faces);
+        e = compEdges(faces)
     end
 
     # Compute model normals
     n = Vector{Vector{Float64}}(undef, 0)
     if computeNormals
-        ;
-        n = compNormals(faces, vertices);
+        n = compNormals(faces, vertices)
     end
 
     return ObjModel(faces, vertices, e, n)
@@ -89,15 +129,13 @@ function readObj(objfile::String; computeNormals=false, computeEdges=false)
     # Compute model edges
     e = Vector{Vector{Int}}(undef, 0)
     if computeEdges
-        ;
-        e = compEdges(f);
+        e = compEdges(f)
     end
 
     # Compute model normals
     n = Vector{Vector{Float64}}(undef, 0)
     if computeNormals
-        ;
-        n = compNormals(f, v);
+        n = compNormals(f, v)
     end
 
     return ObjModel(f, v, e, n)
@@ -107,20 +145,17 @@ function compEdges(f)
     e = Vector{Vector{Int}}(undef, 0)
     for face in f
         fi = sort(face)
-        e1 = [fi[1], fi[2]];
-        e2 = [fi[2], fi[3]];
+        e1 = [fi[1], fi[2]]
+        e2 = [fi[2], fi[3]]
         e3 = [fi[1], fi[3]]
         if !any(Ref(e1) .== e)
-            ;
-            push!(e, e1);
+            push!(e, e1)
         end
         if !any(Ref(e2) .== e)
-            ;
-            push!(e, e2);
+            push!(e, e2)
         end
         if !any(Ref(e3) .== e)
-            ;
-            push!(e, e3);
+            push!(e, e3)
         end
     end
     return e

@@ -66,7 +66,7 @@ export rcsMixMatrix, rcsAllocation, rcsAnalysis, rcsEnvelope, plotRcs, plotRcs!
 export rcsAllocationSimplex, rcsAllocationSimplex!, RcsAllocator, analyzeRcsConf, analyzeRcsConf2D
 include("functions/rcsTools.jl")
 
-export mesh2obj, ObjModel, readObj, writeObj, grid2mesh
+export mesh2obj, ObjModel, readObj, writeObj, grid2mesh, grid2obj
 include("functions/obj.jl")
 
 export includedir, readdirext
