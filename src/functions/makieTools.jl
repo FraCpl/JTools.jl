@@ -261,9 +261,9 @@ end
 function plotBox!(ax, i, x; width=0.3, kwargs...)
     xF, F = ecdf(x)
 
-    μ = xF[findfirst(F .≥ 0.5)]# sum(x)/length(x)
-    x1up = xF[findfirst(F .≥ 0.75)]
-    x1dw = xF[findfirst(F .≥ 0.25)]
+    μ = quantile(x, 0.5)# sum(x)/length(x)
+    x1up = quantile(x, 0.75)#xF[findfirst(F .≥ 0.75)]
+    x1dw = quantile(x, 0.25)#xF[findfirst(F .≥ 0.25)]
     IR = x1up - x1dw
     x3up = x1up + 1.5IR # xF[findfirst(F .≥ 0.997)]
     x3dw = x1dw - 1.5IR # xF[findfirst(F .≥ 1 - 0.997)]
