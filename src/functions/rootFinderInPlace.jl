@@ -1,14 +1,18 @@
 """
-    x = rootFinder(f, x0)
+    x = rootFinder(y, f!, x0)
 
-Finds the solution ``x`` to the nonlinear multivariate root finding problem f(x) = 0,
+Finds the solution ``x`` to the nonlinear multivariate root finding problem y = f(x) = 0,
 given as input an initial guess ``x0``.
+
+In-place function formulation
+f!(y, x)
 
 Author: F. Capolupo\\
 European Space Agency, 2024
 """
-function rootFinder(
-    f::Function,
+function rootFinder!(
+    y::Vector{T},
+    f!::Function,
     x0::Vector{T};
     tol=1e-9,
     maxIter=500,
@@ -20,7 +24,6 @@ function rootFinder(
 
     # Initialize variables
     x = copy(x0)
-    y = f(x)
     nx = length(x)
     nf = length(y)
     J = zeros(nf, nx)
@@ -32,9 +35,7 @@ function rootFinder(
     for iter in 1:maxIter
 
         # Check function value
-        if iter > 1
-            y .= f(x)
-        end
+        f!(y, x)
         maxf = maximum(abs, y)
         if verbose
             @show iter, maxf
@@ -48,10 +49,10 @@ function rootFinder(
             # Newton-Raphson method
             if derivatives == :FiniteDiff
                 # Numerical finite differences
-                J .= FiniteDiff.finite_difference_jacobian(f, x)
+                FiniteDiff.finite_difference_jacobian!(J, f!, x)
             else
                 # Autodiff with ForwardDiff
-                J .= ForwardDiff.jacobian(f, x)
+                ForwardDiff.jacobian!(J, f!, x)
             end
             dx .= -J\y
 
@@ -59,7 +60,7 @@ function rootFinder(
             # Broyden method
             # https://en.wikipedia.org/wiki/Broyden%27s_method
             if iter == 1
-                J .= FiniteDiff.finite_difference_jacobian(f, x)
+                FiniteDiff.finite_difference_jacobian!(J, f!, x)
             else
                 J .+= 1/(dx'*dx)*(y - yOld - J*dx)*dx'
             end
@@ -71,7 +72,8 @@ function rootFinder(
             # https://documentation.help/GMAT/DifferentialCorrector.html
             # https://en.wikipedia.org/wiki/Broyden%27s_method
             if iter == 1
-                H .= pinv(FiniteDiff.finite_difference_jacobian(f, x))  # Pinv also works for non square matrices
+                FiniteDiff.finite_difference_jacobian!(J, f!, x)
+                H .= pinv(J)  # Pinv also works for non square matrices
             else
                 H .+= (dx - H*(y - yOld))*(dx'*H/(dx'*H*(y - yOld)))
             end

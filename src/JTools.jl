@@ -28,10 +28,13 @@ include("functions/goldenSectionSearch.jl")
 export rootFinder
 include("functions/rootFinder.jl")
 
+export rootFinder!
+include("functions/rootFinderInPlace.jl")
+
 export bisection
 include("functions/bisection.jl")
 
-export ode38
+export ode38, ode38!
 include("functions/ode38.jl")
 
 export dm2dv, dm2dt, dv2dm, dv2dt
