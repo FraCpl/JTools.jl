@@ -356,3 +356,15 @@ function plotCorrelation!(fig, data, kwargs...)
 
     return nothing
 end
+
+
+function plotEllipse!(ax, E, nσ=3; kwargs...)
+    λ, V = eigen(E)
+    θ = range(0, 2π, length=200)
+    circle = [cos.(θ) sin.(θ)]'
+
+    ellipse = (V * Diagonal(sqrt.(λ)) * circle)
+    ellipse .*= nσ
+    lines!(ax, ellipse; kwargs...)
+    return nothing
+end

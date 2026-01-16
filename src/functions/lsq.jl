@@ -67,8 +67,7 @@ function lsq(
         # Check convergence criterion
         if J ≤ tolRes
             if verbose
-                ;
-                println("Solution found: residual below tolerance");
+                println("Solution found: residual below tolerance")
             end
             break
         end

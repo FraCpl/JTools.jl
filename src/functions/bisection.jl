@@ -30,4 +30,5 @@ function bisection(f::Function, lb, ub; tol=1e-6, maxIter=1000, verbose=true)
             @show iter, fc
         end
     end
+    return c
 end

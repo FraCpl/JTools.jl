@@ -1,37 +1,33 @@
 # Find minimum of unimodal scalar function f(x) of scalar variable x, with x ∈ [lb, ub]
-function goldenSectionSearch(f::Function, lb, ub; tol=1e-6, maxIter=1000, verbose=true)
+function goldenSectionSearch(f, lb, ub; tol=1e-6, maxIter=1000, verbose=false)
+    invϕ = 2 / (sqrt(5) + 1)
+    a, b = lb, ub
 
-    # Initialize variables
-    invϕ = 2/(√5 + 1)
-    a = lb
-    b = ub
-    c = b - (b - a)*invϕ
-    d = a + (b - a)*invϕ
+    c = b - invϕ * (b - a)
+    d = a + invϕ * (b - a)
 
-    # Start iterations
+    fc, fd = f(c), f(d)
     for iter in 1:maxIter
-        if abs(c - d) ≤ tol
+        if (b - a) ≤ tol
             break
         end
-        fc = f(c)
-        fd = f(d)
+
         if fc < fd
-            b = d
+            b, d = d, c
+            c = b - invϕ * (b - a)
+            fd = fc
+            fc = f(c)
         else
-            a = c
+            a, c = c, d
+            d = a + invϕ * (b - a)
+            fc = fd
+            fd = f(d)
         end
 
-        c = b - (b - a)*invϕ
-        d = a + (b - a)*invϕ
         if verbose
             @show iter, min(fc, fd)
         end
     end
 
-    # Return solution
-    a = (a + b)/2
-    if verbose
-        @show "Solution", a, f(a)
-    end
-    return a
+    return (a + b) / 2
 end

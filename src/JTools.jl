@@ -43,7 +43,7 @@ include("functions/rocketEqs.jl")
 export theme_fra, plotMoon!, plotEarth!, axisoff!, plotframe!, transformModel, sensorFovModel
 export cuboidModel, plotCuboid!, plotCone!, plotCylinder!, plotEcdf, plotEcdf!
 export plotBox, plotBox!, lines3!, scatter3!, multilines!, plotSphere!, plotSensorFov!, mergeMesh
-export plotCorrelation, plotCorrelation!
+export plotCorrelation, plotCorrelation!, plotEllipse!
 include("functions/makieTools.jl")
 
 export crossmat, unwrap!, modd, isMultiple, signum #, logrange
@@ -59,7 +59,7 @@ include("functions/ransac.jl")
 export montecarloNsim, montecarloConfidence
 include("functions/montecarlo.jl")
 
-export gradientDescent
+export gradientDescent, Grad, RMSProp, Momentum, Adam
 include("functions/gradientDescent.jl")
 
 export psd, psd2var
