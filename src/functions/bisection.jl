@@ -1,4 +1,4 @@
-# Find minimum of unimodal scalar function f(x) of scalar variable x, with x ∈ [lb, ub]
+# Find zero of unimodal scalar function f(x) of scalar variable x, with x ∈ [lb, ub]
 # caution: f(a) must be != than f(b)
 function bisection(f::Function, lb, ub; tol=1e-6, maxIter=1000, verbose=true)
 
