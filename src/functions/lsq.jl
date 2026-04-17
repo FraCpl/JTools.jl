@@ -19,7 +19,7 @@ NB: usually in estimation problems r(x) = h(x) - y, where y are stacked noisy me
 and h(x) is the nonlinear measurement model.
 
 Inputs:
-r         Residuals function handle, r(x) = [r₁; r₂; ...], or r = [r₁(x), r₂(x), ...]
+r         Residuals function handle, r(x) = [r₁; r₂; ...], or r = (r₁(x), r₂(x), ...)
 x0        Initial guess for x
 
 Outputs:
@@ -32,118 +32,99 @@ European Space Agency, 2020
 function lsq(
     r,                          # Residual function r(x)
     x0;                         # Initial guess
-    lb=(-Inf),                    # Lower bound on x [can be a vector]
-    ub=(+Inf),                    # Upper bound on x [can be a vector]
-    algorithm=:lm,              # Algorithm choice, can be :lm (Levemberg-Marquardt), or :grad (classic gradient descent)
+    lb=(-Inf),                  # Lower bound on x [can be a vector]
+    ub=(+Inf),                  # Upper bound on x [can be a vector]
     maxIter=1000,               # Maximum number of iterations
-    dxMax=(+Inf),                 # Maximum correction step amplitude
+    dxMax=(+Inf),               # Maximum correction step amplitude
     tol=1e-9,                   # Tolerance on |dx| to declare convergence
     tolRes=1e-9,                # Tolerance on the resiudals, J = r'*W*r
-    λ=1e-3,                     # Levemberg-Marquardt parameter
+    λ=1e-3,                     # Levemberg-Marquardt parameter (set to 0 to use classic gradient descent)
+    ν=2.0,                      # Levemberg-Marquardt update parameter
     maxIterStuck=10,            # Number of iterations to declare the algorithm stuck
     relTolStuck=0.1/100,        # Relative tolerance to declare the algorithm stuck
     verbose=true,               # Show progress
     userJacobian=false,         # input function does provide jacobian, i.e., r, H = r(x), where H = ∂r/∂x
     W=r->ones(length(r)),       # Residuals weighting factor - shall return a vector
 )
-    if algorithm != :lm
-        ;
-        λ = 0.0;
-    end
 
     x = copy(x0)
-    δx = similar(x)
-    rfun = isfun(r) ? [r] : r   # make r(x) a vector of functions
+    xtest = zero(x0)
+    δx = zero(x)
+    rfun = isfun(r) ? (r, ) : r   # make r(x) a tuple of functions
     nx = length(x0)
-    apply(x, δx) = min.(max.(x + δx, lb), ub)
-    iter = 0;
-    Jold = 0.0;
-    iStuck = 0
+    HᵀWH = zeros(nx, nx)
+    H_lm = zeros(nx, nx)
+    HᵀWy = zeros(nx)
+    iter = 0; iStuck = -1
+    Jold = 0.0; J = 0.0
+    repeatIter = false
     while iter < maxIter
+        if !repeatIter
+            # Evaluate residual, jacobian, and additional auxiliary matrices
+            J = lsq_getJacobians!(HᵀWH, HᵀWy, rfun, x, W, userJacobian)
 
-        # Evaluate residual, jacobian, and additional auxiliary matrices
-        J, HᵀWH, HᵀWy = lsq_getJacobians(rfun, x, W, userJacobian, nx)
+            # Check convergence criterion
+            lsq_checkConvergence(J, tolRes, verbose) && break
 
-        # Check convergence criterion
-        if J ≤ tolRes
-            if verbose
-                println("Solution found: residual below tolerance")
-            end
-            break
+            # Check if it is stuck
+            iStuck, stuckFlag = lsq_checkStall(J, Jold, relTolStuck, iStuck, maxIterStuck, verbose)
+            stuckFlag && break
+            Jold = J
         end
-
-        # Check if it is stuck
-        if iter > 0
-            if (Jold - J)/J ≥ relTolStuck
-                iStuck = 0.0
-            else
-                iStuck += 1
-                if iStuck > maxIterStuck
-                    if verbose
-                        ;
-                        println("Solver stalled");
-                    end
-                    break
-                end
-            end
-        end
-        Jold = J
 
         # Compute correction: Levemberg-Marquardt method
-        @label iterLS
         iter += 1
-        #δx .= -(HᵀWH + λ*diagm(diag(HᵀWH)))\HᵀWy
-        δx .= -(HᵀWH + λ*I)\HᵀWy
+        repeatIter = false
+        H_lm .= HᵀWH
+        @inbounds for i in 1:nx
+            H_lm[i, i] += λ * HᵀWH[i, i]
+        end
+        δx .= -H_lm \ HᵀWy
 
         # Saturate correction
-        dxm = maximum(abs.(δx))
+        dxm = maximum(abs, δx)
         if dxm > dxMax
-            δx .*= dxMax/dxm    #avoid overshoots
+            δx .*= dxMax ./ dxm    #avoid overshoots
         end
 
         # Check convergence criterion
-        err = norm(δx)
-        if verbose
-            ;
-            @printf("Iteration: %s    δx: %.3e    λ: %.3e    res: %.3e\n", rpad("$iter", 5, " "), err, λ, J);
-        end
-
-        if err ≤ tol
-            if verbose
-                ;
-                println("Solution found: correction norm below tolerance");
-            end
-            x .= apply(x, δx)   # Correct the estimate before exiting the loop
+        verbose && @printf("Iteration: %s    δx: %.3e    res: %.3e    λ: %.3e\n", rpad("$iter", 5, " "), dxm, J, λ)
+        if dxm ≤ tol
+            verbose && println("Solution found: correction below tolerance")
+            apply!(x, δx, lb, ub)   # Correct the estimate before exiting the loop
             break
         end
 
         # Adapt LM parameter
-        if λ > 0.0
-            Jtest = lsq_getResiduals(rfun, apply(x, δx), W, userJacobian)
-            if Jtest < J
-                λ /= 10.0
-            else
+        if λ > 0
+            xtest .= x
+            apply!(xtest, δx, lb, ub)
+            Jtest = lsq_getResiduals(rfun, xtest, W, userJacobian)
+
+            repeatIter = J < Jtest
+            if repeatIter
                 # In this case the correction term is not accepted, and a new correction
                 # term with increased λ is computed, until Jtest decreases.
-                λ *= 10.0
-                @goto iterLS
+                λ *= ν
+                continue
             end
+
+            λ /= ν
+            x .= xtest  # Accept correction
+        else
+            # Apply correction
+            apply!(x, δx, lb, ub)
         end
-
-        # Correct Estimate
-        x .= apply(x, δx)     # Saturate bounds
     end
 
-    if iter == maxIter && verbose
-        println("Max number of iterations reached")
-    end
+    verbose && iter == maxIter && println("Max number of iterations reached")
 
-    ~, HᵀWH, ~ = lsq_getJacobians(rfun, x, W, userJacobian, nx)
+    lsq_getJacobians!(HᵀWH, HᵀWy, rfun, x, W, userJacobian)      # To update HᵀWH
     res = [(userJacobian ? rk(x)[1] : rk(x)) for rk in rfun]       # Get residuals [overhead: this is already computed in lsq_getJacobians]
     return x, (inv(HᵀWH), res)
 end
 
-isfun(f) = !isempty(methods(f))
+isfun(f) = isa(f, Function)
 
 function lsq_getResiduals(r, x, W, userJacobian)
     # r(x) is a vector of functions
@@ -151,31 +132,57 @@ function lsq_getResiduals(r, x, W, userJacobian)
     for rk in r
         res = userJacobian ? rk(x)[1] : rk(x)
         Wk = W(res)
-        J += res'*(Wk .* res)
+        J += dot(res, (Wk .* res))
     end
-    return J/2
+    return J / 2
 end
 
-function lsq_getJacobians(r, x, W, userJacobian, nx)
+function lsq_getJacobians!(HᵀWH, HᵀWy, r, x, W, userJacobian)
     # r(x) is a vector of functions
     J = 0.0
-    HᵀWH = zeros(nx, nx)
-    HᵀWy = zeros(nx)
+    fill!(HᵀWH, 0.0)
+    fill!(HᵀWy, 0.0)
     for rk in r
         if userJacobian
             res, H = rk(x)
         else
             res = rk(x)
-            H = ForwardDiff.jacobian(rk, x)
+            # H = ForwardDiff.jacobian(rk, x)
+            H = FiniteDiff.finite_difference_jacobian(rk, x)
         end
         # res, H = userJacobian ? rk(x) : rk(x), ForwardDiff.jacobian(rk, x)
         Wk = W(res)
-        J += res'*(Wk .* res)
-        HᵀW = H'*diagm(Wk)
-        HᵀWH += HᵀW*H
-        HᵀWy += HᵀW*res
+        J += dot(res, (Wk .* res))
+        HᵀW = (Wk .* H)'# H'*diagm(Wk)
+        HᵀWH .+= HᵀW*H
+        HᵀWy .+= HᵀW*res
     end
-    return J/2, HᵀWH, HᵀWy
+    return J / 2
+end
+
+function lsq_checkConvergence(J, tolRes, verbose)
+    if J ≤ tolRes
+        if verbose
+            println("Solution found: residual below tolerance")
+        end
+        return true
+    end
+    return false
+end
+
+function lsq_checkStall(J, Jold, relTolStuck, iStuck, maxIterStuck, verbose)
+    flag = false
+    iStuck += 1
+    if (Jold - J) / J ≥ relTolStuck
+        iStuck = -1
+    else
+        iStuck += 1
+        if iStuck > maxIterStuck
+            verbose && println("Solver stalled")
+            flag = true
+        end
+    end
+    return iStuck, flag
 end
 
 # The following function provides a robust and generic lsq weighting function to be used
@@ -184,23 +191,35 @@ end
 #
 # References:
 # [1] Barron, General and Adaptive Robust Loss Function
+#     https://openaccess.thecvf.com/content_CVPR_2019/papers/Barron_A_General_and_Adaptive_Robust_Loss_Function_CVPR_2019_paper.pdf
 # [2] Chebrolu, Labe, Vysotska, Behley, Stachniss, Adaptive Robust Kernels for Non-Linear
-#     Least Squares problems
+#     Least Squares problems, https://arxiv.org/pdf/2004.14938
 # [3] Zhang, Parameter Estimation Techniques: A Tutorial with Application to Conic Fitting
 lsqWeight(x, α, c) = ρ′.(x, α, c) ./ x
 
 function ρ′(x, α, c)
     if abs(α - 2.0) < 1e-8
-        ;
-        return x/c^2;
+        return x/c^2
     end
     if abs(α) < 1e-8
-        ;
-        return 2x/(x^2 + 2c^2);
+        return 2x/(x^2 + 2c^2)
     end
     if α == -Inf
-        ;
-        return x/c^2*exp(-0.5(x/c)^2);
+        return x/c^2*exp(-0.5(x/c)^2)
     end
     return x/c^2*((x/c)^2/abs(α - 2) + 1)^(α/2 - 1)
+end
+
+function apply!(x::Vector{T}, dx, lb::Vector{T}, ub::Vector{T}) where {T}
+    @inbounds for i in eachindex(x)
+        x[i] = clamp(x[i] + dx[i], lb[i], ub[i])
+    end
+    return x
+end
+
+function apply!(x::Vector{T}, dx, lb::T, ub::T) where {T}
+    @inbounds for i in eachindex(x)
+        x[i] = clamp(x[i] + dx[i], lb, ub)
+    end
+    return x
 end
