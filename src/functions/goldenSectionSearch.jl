@@ -8,9 +8,7 @@ function goldenSectionSearch(f, lb, ub; tol=1e-6, maxIter=1000, verbose=false)
 
     fc, fd = f(c), f(d)
     for iter in 1:maxIter
-        if (b - a) ≤ tol
-            break
-        end
+        (b - a) ≤ tol && break
 
         if fc < fd
             b, d = d, c
@@ -24,9 +22,7 @@ function goldenSectionSearch(f, lb, ub; tol=1e-6, maxIter=1000, verbose=false)
             fd = f(d)
         end
 
-        if verbose
-            @show iter, min(fc, fd)
-        end
+        verbose && @show iter, min(fc, fd)
     end
 
     return (a + b) / 2

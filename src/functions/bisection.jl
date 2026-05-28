@@ -7,9 +7,7 @@ function bisection(f::Function, lb, ub; tol=1e-6, maxIter=1000, verbose=true)
     b = ub
     fa = f(a)
     if sign(f(b)) == sign(fa)
-        if verbose
-            println("Ill-posed problem: sign(f(lb)) == sign(f(ub))!")
-        end
+        verbose && println("Ill-posed problem: sign(f(lb)) == sign(f(ub))!")
         return NaN
     end
 
@@ -26,9 +24,7 @@ function bisection(f::Function, lb, ub; tol=1e-6, maxIter=1000, verbose=true)
         else
             b = c
         end
-        if verbose
-            @show iter, fc
-        end
+        verbose && @show iter, fc
     end
     return c
 end

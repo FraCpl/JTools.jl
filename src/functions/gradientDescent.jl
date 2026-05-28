@@ -137,18 +137,15 @@ function gradientDescent(f, x0; optimizer::T=Grad(), gradient!::F=FiniteDiff.fin
         #     end
         #     δx .= -H\∇f
 
-
         # Correct solution (check bounds)
         err = 0.0
         for i in eachindex(δx)
             dx = clamp(δx[i], -dxMax[i], dxMax[i])
             x[i] += dx
-            err += dx*dx
+            err += dx * dx
         end
 
-        if verbose
-            @show iter, f(x)
-        end
+        verbose && @show iter, f(x)
         if isnan(err) || err ≤ tolSq
             break
         end
