@@ -72,7 +72,7 @@ include("functions/rcsTools.jl")
 export mesh2obj, ObjModel, readObj, writeObj, grid2mesh, grid2obj
 include("functions/obj.jl")
 
-export includedir, readdirext
+export readdirext
 include("functions/utils.jl")
 
 include("functions/units.jl")

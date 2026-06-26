@@ -349,7 +349,7 @@ function plotCorrelation!(fig, data, kwargs...)
 
             r = round(cor(xi, yi); digits=2)
             scatter!(ax, xi, yi; kwargs...)
-            scatter!(ax, 0.0, 0.0; color=(:white, 0.0), label="r = $r")
+            scatter!(ax, xi[1], yi[1]; color=(:white, 0.0), label="r = $r")
             axislegend(ax; framevisible=false)
         end
     end

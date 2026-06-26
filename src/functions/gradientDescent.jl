@@ -105,7 +105,7 @@ end
 # examples:
 # gradient! = FiniteDiff.finite_difference_gradient!
 # gradient! = ForwardDiff.gradient!
-function gradientDescent(f, x0; optimizer::T=Grad(), gradient!::F=FiniteDiff.finite_difference_gradient!, maxIter=300, dxMax=Inf*ones(length(x0)), tol=1e-6, verbose=false) where {T<:AbstractLocalOptimizer, F}
+function gradientDescent(f, x0, gradient!::F=FiniteDiff.finite_difference_gradient!; optimizer::T=Grad(), maxIter=300, dxMax=Inf*ones(length(x0)), tol=1e-6, verbose=false) where {T<:AbstractLocalOptimizer, F}
     # Initialize problem and optimizer
     x = copy(x0)
     nx = length(x)

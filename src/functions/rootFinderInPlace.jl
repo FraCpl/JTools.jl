@@ -12,17 +12,18 @@ European Space Agency, 2024
 """
 function rootFinder!(
     y::Vector{T},
-    f!::Function,
+    f!::F,
     x0::Vector{T};
     tol=1e-9,
     maxIter=500,
-    dxMax=[Inf for _ in 1:length(x0)],
+    dxMax=fill(Inf, length(x0)),
     verbose=true,
     method=:Broyden,     # :NewtonRaphson, :Broyden, :ModifiedBroyden
-    derivatives=:FiniteDiff,   # :ForwardDiff or :FiniteDiff (only for NewtonRaphson)
-) where {T}
+    derivatives=:FiniteDiff,   # :ForwardDiff or :FiniteDiff
+) where {T, F}
 
     # Initialize variables
+    y .= zero(eltype(y))
     x = copy(x0)
     nx = length(x)
     nf = length(y)
@@ -30,68 +31,70 @@ function rootFinder!(
     H = zeros(nx, nf)
     dx = zeros(nx)
     yOld = copy(y)
+    yJac = copy(y)
+
+    jac!(J, f!, y, x) = derivatives == :FiniteDiff ?
+        FiniteDiff.finite_difference_jacobian!(J, f!, x) :
+        ForwardDiff.jacobian!(J, f!, y, x)
 
     # Start iterations
-    for iter in 1:maxIter
+    @inbounds for iter in 1:maxIter
 
         # Check function value
         f!(y, x)
         maxf = maximum(abs, y)
-        if verbose
-            @show iter, maxf
-        end
-        if maxf ≤ tol
-            break
-        end
+        verbose && (@show iter, maxf, maximum(abs, dx))
+        maxf ≤ tol && break
 
         # Compute and trim correction, if needed
         if method == :NewtonRaphson
             # Newton-Raphson method
-            if derivatives == :FiniteDiff
-                # Numerical finite differences
-                FiniteDiff.finite_difference_jacobian!(J, f!, x)
-            else
-                # Autodiff with ForwardDiff
-                ForwardDiff.jacobian!(J, f!, x)
-            end
-            dx .= -J\y
+            jac!(J, f!, yJac, x)
+            dx .= -J \ y
 
         elseif method == :Broyden
             # Broyden method
             # https://en.wikipedia.org/wiki/Broyden%27s_method
             if iter == 1
-                FiniteDiff.finite_difference_jacobian!(J, f!, x)
+                jac!(J, f!, yJac, x)
             else
-                J .+= 1/(dx'*dx)*(y - yOld - J*dx)*dx'
+                J .+= 1 / dot(dx, dx) * (y - yOld - J * dx) * dx'
             end
             dx .= -J\y
             yOld .= y
 
-        else
+        elseif method == :ModifiedBroyden
             # Modified Broyden method
             # https://documentation.help/GMAT/DifferentialCorrector.html
             # https://en.wikipedia.org/wiki/Broyden%27s_method
             if iter == 1
-                FiniteDiff.finite_difference_jacobian!(J, f!, x)
+                jac!(J, f!, yJac, x)
                 H .= pinv(J)  # Pinv also works for non square matrices
             else
-                H .+= (dx - H*(y - yOld))*(dx'*H/(dx'*H*(y - yOld)))
+                H .+= (dx - H * (y - yOld)) * (dx' * H / dot(dx, H * (y - yOld)))
             end
             dx .= -H*y
             yOld .= y
+        else
+            error("Unrecognized method $method")
+        end
+
+        kMax = 1.0
+        for i in eachindex(dx)
+            kMax = max(kMax, abs(dx[i]) / dxMax[i])
         end
 
         for i in eachindex(dx)
-            if abs(dx[i]) > dxMax[i]
-                dx[i] = sign(dx[i])*dxMax[i]
-            end
-            x[i] += dx[i]   # Apply correction
+            dxApplied = dx[i] / kMax#clamp(dx[i], -dxMax[i], dxMax[i])
+            x[i] += dxApplied   # Apply correction
+            dx[i] = dxApplied   # TODO: Check
         end
     end
 
     # Return solution
     if verbose
-        println("Solution: x = $x, f(x) = $(f(x))")
+        f!(y, x)
+        println("Solution: x = $x, f(x) = $y")
     end
     return x
 end
