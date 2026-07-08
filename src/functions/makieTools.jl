@@ -317,17 +317,19 @@ end
 
 # Example input data:
 # data = (A = randn(n), B = randn(n), C = randn(n), D = randn(n))
-# TODO: Synchronize zoom among subplots
-function plotCorrelation(data, kwargs...)
+function plotCorrelation(data; kwargs...)
     fig = Figure(; size=(800, 800));
     display(fig)
-    plotCorrelation!(fig, data, kwargs...)
+    plotCorrelation!(fig, data; kwargs...)
     return fig
 end
 
-function plotCorrelation!(fig, data, kwargs...)
+function plotCorrelation!(fig, data; kwargs...)
     varnames = keys(data)
     nvars = length(varnames)
+
+    col_axes = [Axis[] for _ in 1:nvars]
+    row_axes = [Axis[] for _ in 1:nvars]
 
     # Loop over variable pairs to plot
     for i in 1:nvars, j in 1:nvars
@@ -344,6 +346,8 @@ function plotCorrelation!(fig, data, kwargs...)
                 ax = Axis(fig[i - 1, j]; xticksvisible=false, xticklabelsvisible=false, yticksvisible=false, yticklabelsvisible=false)
             end
 
+            push!(col_axes[j], ax)
+            push!(row_axes[i], ax)
             xi = data[varnames[j]]
             yi = data[varnames[i]]
 
@@ -351,6 +355,18 @@ function plotCorrelation!(fig, data, kwargs...)
             scatter!(ax, xi, yi; kwargs...)
             scatter!(ax, xi[1], yi[1]; color=(:white, 0.0), label="r = $r")
             axislegend(ax; framevisible=false)
+        end
+    end
+
+    for j in 1:nvars
+        if !isempty(col_axes[j])
+            linkxaxes!(col_axes[j]...)
+        end
+    end
+
+    for i in 1:nvars
+        if !isempty(row_axes[i])
+            linkyaxes!(row_axes[i]...)
         end
     end
 
