@@ -71,12 +71,12 @@ end
     @inbounds @simd for i in 1:3
         out[i] = A[i, 1]*b[1] + A[i, 2]*b[2] + A[i, 3]*b[3]
     end
-    return nothing
+    return out
 end
 
 @inline function mul3x3!(out, A, B)
     @inbounds for i in 1:3, j in 1:3
         out[i, j] = A[i, 1]*B[1, j] + A[i, 2]*B[2, j] + A[i, 3]*B[3, j]
     end
-    return nothing
+    return out
 end
