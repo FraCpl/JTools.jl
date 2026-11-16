@@ -45,7 +45,7 @@ export plotCorrelation, plotCorrelation!, plotEllipse!
 include("functions/makieTools.jl")
 
 export crossmat, unwrap!, modd, isMultiple, signum #, logrange
-export polyfit, polyval, interp1, mul3x1!, mul3x3!, evalpoly!
+export polyfit, polyval, interp1, evalpoly!#, mul3x1!, mul3x3!
 include("functions/math.jl")
 
 export lsq, lsqWeight
